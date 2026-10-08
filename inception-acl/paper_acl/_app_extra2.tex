@@ -1,0 +1,102 @@
+\section{Prompt-segment inventory}
+\label{app:segments}
+
+Every prompt is assembled from the six segments named in the paper. This table counts how many prompts contain each marker, over 1374 prompts that retain their source text.
+
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}lrr@{}}\toprule
+segment marker & prompts & share \\
+\midrule
+REF: not-a-living-body isolation & 1340 & 97.5\% \\
+GROUND: moir interference & 1259 & 91.6\% \\
+MID: no-crop lock & 1184 & 86.2\% \\
+MID: full-body lock & 1183 & 86.1\% \\
+REF: head-to-feet framing & 1182 & 86.0\% \\
+GROUND: film grain & 1158 & 84.3\% \\
+GROUND: halftone screen & 1127 & 82.0\% \\
+GROUND: Ishihara camouflage & 1092 & 79.5\% \\
+TAIL: figure-shield clause & 997 & 72.6\% \\
+\midrule
+\textbf{total prompts} & \textbf{1374} & \\
+\bottomrule\end{tabular}
+\caption{\textbf{Segment inventory.} Counts are of prompts containing each marker, not of distinct texts. \textbf{The four carrier markers co-occur in most of the corpus}, which is why the carrier sweep of \S\ref{app:ablationdetail} had to vary one layer at a time rather than compare corpora.}
+\label{tab:appsegments}\end{table}
+
+\section{Distinct segment texts}
+\label{app:distinct}
+
+How many \emph{distinct} texts the corpus used in each segment. A small number against a large prompt count means the segment was held essentially fixed while another was varied, which is what makes the sweeps single-variable.
+
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}lr@{}}\toprule
+segment & distinct texts \\
+\midrule
+PRE (shell) first sentence & 82\\
+POSE clause & 75\\
+GROUND clause (opening) & 33\\
+TAIL clause & 3\\
+\bottomrule\end{tabular}
+\caption{\textbf{Distinct texts per segment.} The shell is the most varied segment and the pose clause is second; both are the segments an uncontrolled comparison is most likely to attribute an effect to.}
+\label{tab:appdistinct}\end{table}
+
+\section{Refusal-text inventory, verbatim}
+\label{app:reftexts}
+
+Every distinct refusal message in the corpus, with its count. The small number of distinct messages is the point: the endpoint has a fixed set, and several carry a meaning different from the machine-readable code attached to them.
+
+\begin{table*}[t]\centering\small
+\begin{tabular}{@{}rl@{}}\toprule
+$n$ & refusal text (verbatim, first 140 characters) \\
+\midrule
+31 & \texttt{(no message field)} \\
+3 & \texttt{[returned in Chinese, 24 chars: rate-limit notice]} \\
+2 & \texttt{Sorry, I cant help create explicit nude or sexually posed images of a character.} \\
+1 & \texttt{Im sorry, but I cant help create an image that depicts a named or recognizable character in an explicit nude pose.} \\
+1 & \texttt{Im sorry, but I cant help create an image that depicts explicit nude sexualized anatomy or poses focused on exposing intimate areas.} \\
+1 & \texttt{Sorry, I cant help create images that depict explicit nude sexualized anatomy or exposed genital-focused poses.} \\
+1 & \texttt{Sorry, I cant help create an image featuring a nude sexualized depiction of a character or a detailed eroticized anatomical pose.} \\
+1 & \texttt{Sorry, I cant help create an image that depicts explicit nude anatomy with exposed intimate areas.} \\
+1 & \texttt{Im sorry, but I cant help create sexualized nude imagery of a named fictional character.} \\
+1 & \texttt{Sorry, I cant help create sexualized imagery of characters in that kind of intimate pose, even when they are fictional adults.} \\
+1 & \texttt{[returned in Chinese, 27 chars: rate-limit notice]} \\
+1 & \texttt{[returned in Chinese, 30 chars: rate-limit notice]} \\
+1 & \texttt{Sorry, I cant help create an image of a character depicted nude or with explicit sexualized body emphasis.} \\
+1 & \texttt{Sorry, I cant help create an image that depicts a characters nude or explicitly exposed body, even as an animation production reference.} \\
+1 & \texttt{[returned in Chinese, 27 chars: rate-limit notice]} \\
+1 & \texttt{[returned in Chinese, 32 chars: rate-limit notice]} \\
+1 & \texttt{Sorry, I cant help create a nude or sexually posed depiction of a character, even if the character is fictional.} \\
+1 & \texttt{Sorry, I cant help create an image that depicts a nude or sexualized character pose.} \\
+1 & \texttt{Im sorry, but I cant help create a nude depiction of a character, even in the form of an animation production sheet.} \\
+1 & \texttt{Im sorry, but I cant help create an image of a nude or sexually exposed character.} \\
+1 & \texttt{[returned in Chinese, 31 chars: rate-limit notice]} \\
+1 & \texttt{[returned in Chinese, 29 chars: rate-limit notice]} \\
+1 & \texttt{[returned in Chinese, 30 chars: rate-limit notice]} \\
+1 & \texttt{[returned in Chinese, 27 chars: rate-limit notice]} \\
+\bottomrule\end{tabular}
+\caption{\textbf{Distinct refusal texts by frequency.} Several name a \emph{character} rather than an anatomical category, which is a different construct from the one a nudity detector measures. \textbf{Classifying these by their \texttt{code} field would merge the character category, the policy category and the rate limit into one cell.}}
+\label{tab:appreftexts}\end{table*}
+
+\section{Pass latency, detailed}
+\label{app:passlat}
+
+The pass state is the only one whose timing reflects generation rather than moderation or queueing, so its distribution is the control against which the refusal band is compared.
+
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}lr@{}}\toprule
+quantile & seconds \\
+\midrule
+min & 18.8\\
+p05 & 25.1\\
+p10 & 26.3\\
+p25 & 28.6\\
+median & 32.0\\
+p75 & 37.6\\
+p90 & 47.5\\
+p95 & 53.2\\
+p99 & 89.9\\
+max & 484.0\\
+\bottomrule\end{tabular}
+\caption{\textbf{Pass latency, 516 cells with a recorded duration.} A refusal at 7.6\,s sits below this distribution's 5th percentile, and the two overlap by a small tail only.}
+\label{tab:apppasslat}\end{table}
+
+Only 16 of 516 successful requests (3.1\%) took longer than 60\,s, and 4 took longer than 120\,s. \textbf{A pass is normally a thirty-second event.} A request still unanswered at 300\,s is not a slow pass; it is a different state, and the endpoint's own poll ceiling is where it lands.

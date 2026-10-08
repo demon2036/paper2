@@ -1,0 +1,157 @@
+\begin{thebibliography}{19}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Cho et~al.(2024)Cho, Hu, Garg, Anderson, Krishna, Baldridge, Bansal,
+  Pont-Tuset, and Wang}]{dsg}
+Jaemin Cho, Yushi Hu, Roopal Garg, Peter Anderson, Ranjay Krishna, Jason
+  Baldridge, Mohit Bansal, Jordi Pont-Tuset, and Su~Wang. 2024.
+\newblock \href {https://arxiv.org/abs/2310.18235} {{Davidsonian Scene Graph:
+  Improving Reliability in Fine-grained Evaluation for Text-to-Image
+  Generation}}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Chouldechova et~al.(2025)Chouldechova, Cooper, Barocas, Palia, Vann,
+  and Wallach}]{comparisonrequires}
+Alexandra Chouldechova, A.~Feder Cooper, Solon Barocas, Abhinav Palia, Dan
+  Vann, and Hanna Wallach. 2025.
+\newblock \href {https://arxiv.org/abs/2601.18076} {Comparison requires valid
+  measurement: Rethinking attack success rate comparisons in {AI} red teaming}.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}.
+
+\bibitem[{Gandikota et~al.(2023)Gandikota, Materzynska, Fiotto-Kaufman, and
+  Bau}]{esd}
+Rohit Gandikota, Joanna Materzynska, Jaden Fiotto-Kaufman, and David Bau. 2023.
+\newblock \href
+  {https://openaccess.thecvf.com/content/ICCV2023/html/Gandikota_Erasing_Concepts_from_Diffusion_Models_ICCV_2023_paper.html}
+  {{Erasing Concepts from Diffusion Models}}.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}.
+
+\bibitem[{Ghosh et~al.(2023)Ghosh, Hajishirzi, and Schmidt}]{geneval}
+Dhruba Ghosh, Hanna Hajishirzi, and Ludwig Schmidt. 2023.
+\newblock \href
+  {https://proceedings.neurips.cc/paper_files/paper/2023/hash/a3bf71c7c63f0c3bcb7ff67c67b1e7b1-Abstract-Datasets_and_Benchmarks.html}
+  {{GenEval: An Object-Focused Framework for Evaluating Text-to-Image
+  Alignment}}.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}.
+
+\bibitem[{Hu et~al.(2023)Hu, Liu, Kasai, Wang, Ostendorf, Krishna, and
+  Smith}]{tifa}
+Yushi Hu, Benlin Liu, Jungo Kasai, Yizhong Wang, Mari Ostendorf, Ranjay
+  Krishna, and Noah~A Smith. 2023.
+\newblock \href {https://arxiv.org/abs/2303.11897} {{TIFA: Accurate and
+  Interpretable Text-to-Image Faithfulness Evaluation with Question
+  Answering}}.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}.
+
+\bibitem[{Kharlapenko et~al.(2026)Kharlapenko, Bratchikov, Korolev, and
+  Nikolich}]{rise}
+Dmitrii Kharlapenko, Sergei Bratchikov, Konstantin Korolev, and Aleksandr
+  Nikolich. 2026.
+\newblock \href {https://arxiv.org/abs/2609.34920} {{RISE}: Red-teaming via
+  iterative strategy evolution for modern text-to-image models}.
+\newblock \emph{arXiv preprint arXiv:2609.34920}.
+
+\bibitem[{Liu et~al.(2024)Liu, Khakzar, Gu, Chen, Torr, and
+  Pizzati}]{latentguard}
+Runtao Liu, Ashkan Khakzar, Jindong Gu, Qifeng Chen, Philip Torr, and Fabio
+  Pizzati. 2024.
+\newblock \href {https://arxiv.org/abs/2404.08031} {{Latent Guard: a Safety
+  Framework for Text-to-image Generation}}.
+\newblock In \emph{European Conference on Computer Vision (ECCV)}.
+
+\bibitem[{Liu et~al.(2025)Liu, Ma, Xue, and Bai}]{modx}
+Shuofeng Liu, Mengyao Ma, Minhui Xue, and Guangdong Bai. 2025.
+\newblock \href {https://shuofeng-uq.github.io/assets/pdf/Modx.pdf} {Modifier
+  unlocked: Jailbreaking text-to-image models through prompts}.
+
+\bibitem[{Ma et~al.(2025)Ma, Li, Xiao, Cao, Zhang, Ye, and Zhao}]{jpa}
+Jiachen Ma, Yijiang Li, Zhiqing Xiao, Anda Cao, Jie Zhang, Chao Ye, and Junbo
+  Zhao. 2025.
+\newblock \href {https://aclanthology.org/2025.findings-naacl.172/}
+  {{Jailbreaking Prompt Attack: A Controllable Adversarial Attack against
+  Diffusion Models}}.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  NAACL 2025}.
+
+\bibitem[{Maple et~al.(2026)Maple, Kumar, and Tapwal}]{singleconfig}
+Carsten Maple, Abhishek Kumar, and Riya Tapwal. 2026.
+\newblock \href {https://arxiv.org/abs/2605.09070} {Single-configuration attack
+  success rate is not enough: Jailbreak evaluations should report
+  distributional attack success}.
+\newblock \emph{arXiv preprint arXiv:2605.09070}.
+
+\bibitem[{Mukhopadhyay(2026)}]{past2harm}
+Snehasis Mukhopadhyay. 2026.
+\newblock \href {https://arxiv.org/abs/2605.27545} {{PAST2HARM}: A simple
+  adaptive past tense attack for jailbreaking multimodal {AI}}.
+\newblock \emph{arXiv preprint arXiv:2605.27545}.
+
+\bibitem[{Mustafa et~al.(2026)Mustafa, Ye, Lu, Pound, and
+  Gowda}]{aestheticcamouflage}
+Ahmed~B Mustafa, Zihan Ye, Yang Lu, Michael~P Pound, and Shreyank~N Gowda.
+  2026.
+\newblock \href {https://arxiv.org/abs/2604.01888} {Low-effort jailbreak
+  attacks against text-to-image safety filters}.
+\newblock \emph{arXiv preprint arXiv:2604.01888}.
+
+\bibitem[{{notAI-tech}(2026)}]{nudenet}
+{notAI-tech}. 2026.
+\newblock \href {https://github.com/notAI-tech/NudeNet} {{NudeNet}: Lightweight
+  nudity detection}.
+\newblock Software documentation; evaluated package version 3.4.2; accessed
+  September 2026.
+
+\bibitem[{Pathade et~al.(2026)Pathade, Pawar, and Patil}]{asrisnotanumber}
+Chetan Pathade, Prathamesh Pawar, and Shubham Patil. 2026.
+\newblock \href {https://arxiv.org/abs/2609.25173} {Attack success rate is not
+  a number: On measurement validity in agentic {AI} security evaluation}.
+\newblock \emph{arXiv preprint arXiv:2609.25173}.
+
+\bibitem[{Rombach et~al.(2022)Rombach, Blattmann, Lorenz, Esser, and
+  Ommer}]{ldm}
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn
+  Ommer. 2022.
+\newblock \href {https://arxiv.org/abs/2112.10752} {{High-Resolution Image
+  Synthesis with Latent Diffusion Models}}.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}.
+
+\bibitem[{Saharia et~al.(2022)Saharia, Chan, Saxena, Li, Whang, Denton,
+  Ghasemipour, Ayan, Mahdavi, Lopes, Salimans, Ho, Fleet, and Norouzi}]{imagen}
+Chitwan Saharia, William Chan, Saurabh Saxena, Lala Li, Jay Whang, Emily
+  Denton, Seyed Kamyar~Seyed Ghasemipour, Burcu~Karagol Ayan, S.~Sara Mahdavi,
+  Rapha~Gontijo Lopes, Tim Salimans, Jonathan Ho, David~J Fleet, and Mohammad
+  Norouzi. 2022.
+\newblock \href {https://arxiv.org/abs/2205.11487} {{Photorealistic
+  Text-to-Image Diffusion Models with Deep Language Understanding}}.
+\newblock \emph{arXiv preprint arXiv:2205.11487}.
+
+\bibitem[{Schramowski et~al.(2023)Schramowski, Brack, Deiseroth, and
+  Kersting}]{sld}
+Patrick Schramowski, Manuel Brack, Bj{\"o}rn Deiseroth, and Kristian Kersting.
+  2023.
+\newblock \href {https://arxiv.org/abs/2211.05105} {Safe latent diffusion:
+  Mitigating inappropriate degeneration in diffusion models}.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}.
+
+\bibitem[{Sheng et~al.(2026)Sheng, Sun, Sun, Yue, Wu, He, and Wei}]{pixjail}
+Leyi Sheng, Han Sun, Zhen Sun, Yuntao Yue, Jinlin Wu, Xinlei He, and Jiaheng
+  Wei. 2026.
+\newblock \href {https://arxiv.org/abs/2606.24081} {{PixJail}: Self-evolving
+  paper-to-pipeline reproduction for text-to-image jailbreak evaluation}.
+\newblock \emph{arXiv preprint arXiv:2606.24081}.
+
+\bibitem[{Yang et~al.(2024)Yang, Gao, Yang, Zhong, and Xu}]{guardt2i}
+Yijun Yang, Ruiyuan Gao, Xiao Yang, Jianyuan Zhong, and Qiang Xu. 2024.
+\newblock \href {https://arxiv.org/abs/2403.01446} {{GuardT2I: Defending
+  Text-to-Image Models from Adversarial Prompts}}.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}.
+
+\end{thebibliography}

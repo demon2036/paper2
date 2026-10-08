@@ -1,0 +1,590 @@
+\documentclass[11pt]{article}
+\usepackage[review]{acl}
+\usepackage{times,latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{graphicx,booktabs,amsmath,amssymb,tabularx}
+\usepackage{url}
+\hypersetup{hidelinks,pdftitle={No Detections, Visible Nudity},pdfauthor={Anonymous research draft}}
+
+\title{No Detections, Visible Nudity:\\Evidence-First Review of an Original Image}
+\author{Anonymous authors}
+\newcommand{\method}{Evidence-First Audit}
+\newcommand{\yes}{\textsf{yes}}
+\newcommand{\no}{\textsf{no}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+An original image contains an unclothed figure in an artwork displayed on an
+easel, yet NudeNet returns no detections and two public NSFW classifiers assign
+scores of 0.000199 and 0.003657. This observation requires neither background
+replacement nor adversarial image modification: it occurs on the supplied image
+itself. We study the resulting audit blind spot: an empty detector output or a
+low global safety score cannot establish that visible nudity is absent.
+We propose an evidence-first review protocol that describes visible content
+before applying a contextual policy judgment. On the identical original input,
+GPT-5.6 Luna identifies the unclothed depiction while separately reporting no
+clear explicit anatomical detail and no sexual activity. In an exploratory
+matched set of 18 inputs, a structured review agrees with all reference content labels. This single-source case study motivates
+an auditable separation of detection, visibility, and policy, rather than a
+claim that artistic nudity is necessarily prohibited or that a new classifier
+has achieved general superiority.
+\end{abstract}
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[c]{0.34\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/original_input.jpg}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.62\linewidth}
+\small
+\textbf{The supplied original, not a neutral-background substitute.}
+
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+System & Actual output on this image \\
+\midrule
+NudeNet 3.4.2 & \texttt{detections = []} \\
+Falconsai & NSFW score: 0.00019937 \\
+AdamCodd & NSFW score: 0.00365668 \\
+\midrule
+Luna, structured & Unclothed depiction: \yes \\
+review & Explicit detail: \no; activity: \no \\
+\bottomrule
+\end{tabularx}
+
+\textbf{Central finding.} The detector signals do not surface the visible
+unclothed depiction. A direct, content-specific review of the same image does.
+\end{minipage}
+\caption{\textbf{The original-image finding that motivates the paper.}
+The displayed image is a byte-identical copy of the supplied input, not an
+edited or re-composited variant. Each system uses its native preprocessing.
+NSFW scores, body-part detections, and content attributes have different
+semantics; this is an evidence comparison, not a common-label accuracy table.}
+\label{fig:original}
+\end{figure*}
+
+\section{Introduction: the missed content is already in the original}
+\label{sec:intro}
+
+\textbf{The starting point is one concrete image, not a transformation.}
+Figure~\ref{fig:original} shows the original artwork-on-easel input. Its central
+artwork visibly depicts an unclothed human figure. Direct evaluation of the
+unmodified file produces an empty NudeNet result and very low NSFW scores from
+two public image classifiers. A reviewer who treats those outputs as evidence
+that the image contains no nudity would miss content that is visibly present.
+This is the central problem studied here.
+
+Safety systems often compress different questions into a single signal:
+is a person depicted without clothing; are explicit anatomical details visible;
+is there sexual activity; and should a particular service allow the image?
+These questions are not interchangeable. A stylized artwork can contain an
+unclothed depiction without depicting sexual activity, and an applicable policy
+may permit it. Conversely, permission does not erase what is depicted. A useful
+audit therefore needs a content record that survives the final allow/reject
+decision.
+
+Our proposed response is \emph{not} to manipulate the image until a detector
+fires. \method{} asks a vision-language reviewer to inspect the original image
+and return separate content attributes, visual evidence, and uncertainty.
+Policy assessment is a subsequent operation. We instantiate this protocol
+using the requested GPT-5.6 Luna model and evaluate it on the same original
+file used by the detectors. It recognizes the unclothed depiction without
+conflating it with sexual activity. No crop, neutral canvas, or replacement
+background is needed for this primary result.
+
+\paragraph{Contributions and scope.}
+We contribute (i) a reproducible original-image case with raw detector outputs
+and byte-level input identity; (ii) an executable evidence-first audit protocol
+that separates visible content from policy; and (iii) a matched exploratory
+evaluation of structured content recognition. Additional background experiments are diagnostic
+supplementary evidence, not the premise of the paper. Our evidence supports a
+case-level audit blind spot, not a population-wide failure rate, a newly trained
+model, or a demonstrated violation of a closed-source service's policy.
+
+\section{Original-image evidence}
+\label{sec:case}
+
+\subsection{Input identity and reference content}
+
+The supplied file is a JPEG image of size $848\times1264$, despite the
+\texttt{.png} suffix in its original pathname. Its SHA-256 is recorded in
+Appendix~\ref{app:repro}. The local asset, all three direct detector records,
+and the anonymous Luna input \texttt{S04} have this same hash. Consequently,
+differences below cannot be attributed to selecting a neutral-background
+variant or substituting a different image for the vision-language review.
+
+The case-level content reference is \emph{an unclothed human depiction within
+the artwork}. No visible sexual activity is annotated. This reference was
+assigned by the research agent from the visible image, not by an independent
+human panel. The Luna review separately reports the presence of the
+unclothed depiction and the absence of clear explicit anatomical detail and
+sexual activity. We do not infer a real person's identity or the provenance
+of the depicted scene.
+
+\subsection{What the existing detectors actually return}
+
+We run NudeNet 3.4.2 with its 320n ONNX model and native preprocessing.
+The raw result is an empty list: no body-part detections are returned.
+The implementation uses a raw candidate threshold of 0.20, an NMS score
+threshold of 0.25, and NMS IoU threshold of 0.45. We preserve the empty output
+as such; we do not manufacture a body-part confidence or interpret zero
+detected box area as zero visible body area.
+
+We also run a community FP32 ONNX export of
+\texttt{Falconsai/nsfw\_image\_detection} and the FP32 ONNX model from
+\texttt{AdamCodd/vit-base-nsfw-detector}. They assign NSFW scores
+$0.0001993742$ and $0.0036566833$, respectively. Neither raises an NSFW
+alarm at threshold 0.50, or at any of the recorded thresholds
+$\{0.20,0.35,0.50,0.65,0.80\}$. These are model class scores, not calibrated
+probabilities that the image lacks nudity. Model revisions and preprocessing
+are retained with the raw outputs.
+
+\paragraph{The precise failure claim.}
+The tested detector signals \emph{do not surface the unclothed depiction in
+this original image}. If these signals are used as the sole check for whether
+such content exists, the resulting audit has a false negative with respect to
+that content task. This does not by itself establish an error under either
+classifier's native NSFW policy, nor a body-part localization error against
+independently annotated NudeNet boxes. The distinction makes the warning more
+actionable: do not use a negative safety signal as a complete content inventory.
+
+\section{Method: describe the evidence before judging the context}
+\label{sec:method}
+
+\subsection{A content record, not another undifferentiated ``sex'' score}
+
+For an original image $x$, the first stage produces
+\begin{equation}
+e(x)=(u,d,a,m,r,q), \qquad u,d,a\in\{0,1,\bot\},
+\label{eq:record}
+\end{equation}
+where $u$ denotes an unclothed human depiction, $d$ clear explicit anatomical
+detail, $a$ sexual activity, $m$ the depicted medium, $r$ a brief visual-evidence
+description, and $q$ uncertainty. The symbol $\bot$ means the content cannot be
+determined from the visible image. It must not silently become a negative
+label. We retain these attributes even when the eventual policy permits the
+image.
+
+The second stage applies the actual deployment policy $\pi$:
+\begin{equation}
+z=\pi\big(e(x),c(x)\big),
+\label{eq:policy}
+\end{equation}
+where $c(x)$ is relevant context and $z$ is an allow, review, or reject outcome.
+The first stage was executed in this study; the second is a proposed integration
+contract, not an evaluated production policy engine. The design does not
+require artistic or medical context to be ignored when making a policy
+decision. It requires that such context not replace an account of the visible
+content.
+
+\begin{table*}[tp]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}lXX@{}}
+\toprule
+Stage & Input and output & Required behavior \\
+\midrule
+Evidence review & Original image $x\rightarrow e(x)$ & Inspect depicted content,
+including artwork within the scene; separate the three attributes. \\
+Policy assessment & $e(x)$, context, policy $\rightarrow z$ & Allow permitted art
+when appropriate; do not erase a positive content attribute. \\
+Audit logging & Input hash, $e(x)$, $z$, versions & Make disagreement inspectable;
+retain abstentions and the actual detector output. \\
+\bottomrule
+\end{tabularx}
+\caption{\method{} as a review protocol. Only the evidence-review stage has
+been empirically evaluated here. No automatic crop or image transformation is
+part of the primary original-image experiment.}
+\label{tab:method}
+\end{table*}
+
+\subsection{Executed structured review}
+
+An agent context was explicitly assigned \texttt{gpt-5.6-luna} and
+inspected 18 anonymous image files in a fixed order using the image-viewing
+tool. Instructions forbade access to reference labels, baseline scores, and
+the manuscript. This was instruction-level label blinding, not operating-system
+isolation. The original file appeared as \texttt{S04}.
+
+The instruction asked for three separate content attributes:
+\begin{quote}\small
+Based only on what is visible in each image, determine whether it contains
+an unclothed person or depiction, clear explicit anatomical detail, and sexual
+activity. Do not merge these three judgments.
+\end{quote}
+The executed instructions were in Chinese; the wording above is an English
+translation. The original protocol and responses are retained in the research
+files. This structured review implements content decomposition; we do not
+present an ambiguous one-word ``sex?'' query as an evaluated baseline.
+
+\section{Evaluation: does the method see the original image?}
+\label{sec:results}
+
+\subsection{Primary result: direct review recovers the visible content}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}Xccc@{}}
+\toprule
+Review & Unclothed & Detail & Activity \\
+\midrule
+Luna, structured & \yes & \no & \no \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Same original input, no image modification.} The review
+identifies the content not surfaced by the detector signals in
+Figure~\ref{fig:original}. A single image provides a case outcome, not an
+accuracy estimate.}
+\label{tab:original-review}
+\end{table}
+
+The structured review describes an unclothed figure in the woodblock-style
+artwork on the easel and reports no uncertainty. This is an actual content
+judgment on \texttt{S04}, not a prediction inferred from scores on a crop or
+a background-replaced image.
+
+The operational improvement is an explicit content record: the system can
+acknowledge that nudity is depicted while retaining separate negative findings
+for clear explicit detail and sexual activity. It need not choose between
+``everything is safe, therefore nothing is depicted'' and ``a nude depiction
+exists, therefore reject.'' The original case demonstrates this capability;
+it does not isolate which internal model mechanism enables it.
+
+\subsection{Exploratory matched comparison}
+
+To check that the reviewer did not simply label every input as containing an
+unclothed figure, we include five benign sources: coffee, a cat, a rocket, a
+clothed astronaut, and a clothed camera operator. The exploratory set comprises
+the original, 12 background/scale variants of its artwork, and one condition
+from each benign source. This yields 13 positive conditions and five negatives,
+but only one positive source and five negative sources.
+
+\begin{table*}[tp]
+\centering
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Method, same 18 inputs & TP/FN & FP/TN & Accuracy & Recall \\
+\midrule
+CLIP, generic full-image reference & 6/7 & 2/3 & 50.00\% & 46.15\% \\
+CLIP, art-aware full-image reference & 10/3 & 0/5 & 83.33\% & 76.92\% \\
+Luna, basic structured review & 13/0 & 0/5 & 100.00\% & 100.00\% \\
+\bottomrule
+\end{tabular}
+\caption{Descriptive recognition results for \emph{unclothed human depictions},
+not pornography or policy violations. The inputs and reference labels are
+identical across rows. The correlated variants are not independent examples.
+CLIP is an auxiliary task-matched reference, not the paper's proposed method.}
+\label{tab:matched}
+\end{table*}
+
+The Luna review agrees with all 18 reference labels and correctly leaves the
+five benign conditions negative. Its false-positive rate is zero on these
+five conditions.
+
+These 18/18 results must not be read as general 100\% accuracy. The positive
+conditions derive from the same artwork, reference labels come from the
+research agent, and the review has only one sequential evaluation
+context. There are no sexual-activity positives, no medical images, and no
+independent human adjudication. We therefore cannot estimate sexual-activity
+recall, medical-domain accuracy, or source-level generalization.
+
+\section{Measurement beyond attack success rate}
+\label{sec:metrics}
+
+The original-image question is not an attack-success-rate (ASR) question.
+ASR requires a defined target policy and an attack outcome. It neither measures
+how much content is visible nor distinguishes an undetected depiction from
+an allowed artwork. We instead report the following complementary quantities.
+
+\paragraph{Content recognition.}
+For an explicit content reference, report recall, false-positive rate (FPR),
+accuracy, and balanced accuracy (BA), together with raw confusion counts:
+\begin{equation}
+\begin{aligned}
+\mathrm{Recall}&=\frac{TP}{TP+FN},\quad
+\mathrm{FPR}=\frac{FP}{FP+TN},\\
+\mathrm{BA}&=\frac{\mathrm{Recall}+1-\mathrm{FPR}}{2}.
+\end{aligned}
+\end{equation}
+If an attribute has no positive references, its recall is unidentifiable, not
+zero. Abstentions should be reported separately with coverage; none occurred
+in the recorded Luna review. Native NSFW scores are not inserted into
+this content-accuracy table as though the tasks were identical.
+
+\paragraph{Visibility and input resolution.}
+For a research annotation $M$ and preprocessing transform $T_j$ of model $j$,
+we record a frame-area fraction and effective reference pixels:
+\begin{equation}
+A(x)=\frac{|M|}{WH},\qquad E_j(x)=|T_j(M)|.
+\end{equation}
+The annotation is a coarse visible torso-and-limb region, not a segmentation
+of all skin or a ``pornography area.'' These measures describe the evidence
+available to a model; they do not define sexual severity. The supplementary
+scale controls demonstrate why identical semantic labels may occupy very
+different numbers of model-input pixels.
+
+\paragraph{Continuous signals and policy decisions.}
+Keep the actual class scores and detections, rather than only thresholded
+outcomes. A score shift is not necessarily a content-label change, and neither
+necessarily changes the policy outcome. For future ordinal severity judgments,
+an independently annotated rubric and agreement study would be needed before
+reporting ordinal error or rank correlation. We do not invent such a severity
+scale from this one image.
+
+\section{Related work}
+
+Safe Latent Diffusion and I2P evaluate inappropriate generations using explicit
+detector-based criteria \citep{sld}. NudeNet provides body-part detections and
+scores \citep{nudenet}, whereas SafeSearch exposes several content likelihood
+categories \citep{safesearch}. These outputs are useful but are not direct
+measurements of visible surface area or interchangeable definitions of nudity.
+UnsafeBench examines safety classifiers on real-world and generated images,
+motivating attention to evaluation domain \citep{unsafebench}.
+
+Artistic nudity has already been studied explicitly in content moderation
+\citep{artcentric}. Our work does not claim to discover that art is a difficult
+domain, nor to introduce the first use of CLIP for artistic content. Likewise,
+LlavaGuard establishes prior work on structured vision-language safety
+assessment \citep{llavaguard}. Our narrower contribution is an original-image
+case with verified input identity, direct evidence-first review, and matched content-recognition diagnostics. Six-CD studies
+concept removal and preservation \citep{sixcd}; content preservation and
+visible nudity measurement remain distinct tasks. We discuss these works as
+related literature, not as models evaluated in our experiment.
+
+\section{Discussion and conclusion}
+
+\paragraph{What caused the empty result?}
+Stylization, small effective visual regions, domain mismatch, background
+features, and label definitions are plausible explanations. The direct-image
+experiment does not identify their causal contributions. Supplementary
+background and crop controls reveal score sensitivity and false-positive
+trade-offs, but cannot establish an internal artistic-exemption mechanism.
+The paper's central observation does not depend on such an attribution.
+
+\paragraph{Practical implication.}
+If a product needs to know whether nudity is depicted, an empty detector result
+should not close the content audit. Preserve evidence fields alongside policy
+decisions, and assess review mechanisms on both missed depictions and benign
+artwork or object false positives. Any escalation policy should be evaluated
+under an explicit review budget rather than assumed to work because one
+example is recovered. The source image remains local because public
+redistribution rights have not been established; no new explicit content was
+generated for this study.
+
+\paragraph{Conclusion.}
+\textbf{The supplied original already contains the finding: visible artistic
+nudity, no NudeNet detections, and very low NSFW scores.} Direct structured
+review of that same image records the unclothed depiction without mislabeling
+it as sexual activity. This motivates evidence-first auditing, while the single-source design delimits what has actually been demonstrated. Background transformations are supplementary diagnostics,
+not the central claim.
+
+\section*{Limitations}
+\paragraph{What is needed for a stronger method claim?}
+A source-disjoint dataset, independently adjudicated content labels, repeated
+reviews, task-matched baselines, and cost/latency measurements are required.
+NudeNet should additionally be evaluated against its native body-part labels.
+The Luna identifier records the model requested through the agent interface;
+we lack an independently verifiable serving snapshot and calibrated
+probabilities. There is no new training, automatic artwork localization,
+deployed policy engine, or demonstrated end-to-end superiority in this study.
+
+\section*{Reproducibility statement}
+The local research bundle contains the original input, its hash, frozen model
+metadata, raw detector outputs, the structured Luna review file, sample mappings, and
+analysis code. The accompanying verification script checks all 211 image hashes
+against detector records and all 18 review-input mappings before validating the
+paper's key figures. No missing experiment is converted into a zero score.
+
+\bibliography{references}
+
+\appendix
+\section{Supplementary diagnostics: background is not the primary input}
+\label{app:background}
+
+These experiments explore the original finding; they do not replace the
+original-image evaluation. We extract the complete artwork using the manually
+specified rectangle $[120,350,744,924]$, with right and bottom endpoints
+excluded. It includes both the figure and the artwork's wave pattern. This is
+an oracle region, not automatically discovered anatomy.
+
+We use one neutral background and three natural scenes (living room, office,
+and bookshelves). Each natural scene additionally has a mean-color and an
+$8\times8$ shuffled-block control, producing ten background versions. Six
+foreground sources and three scales yield $6\times10\times3=180$ composites:
+30 artwork conditions and 150 benign conditions. Eighteen auxiliary crops,
+ten background-only images, the original, and two historical outputs bring
+the checked inventory to 211 images. All 180 composites retain identical
+foreground pixels across backgrounds at the same scale. None is represented
+as a newly successful generative edit.
+
+\subsection{Actual detector scores for the 12 natural/reference conditions}
+
+\begin{table*}[tp]
+\centering
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Scale & Background & Falconsai NSFW & AdamCodd NSFW & CLIP art margin \\
+\midrule
+0.50 & Neutral gray & 0.00064829 & 0.02091475 & -0.00723764 \\
+0.50 & Living room & 0.00095839 & 0.00849401 & +0.00565173 \\
+0.50 & Office & 0.00016494 & 0.01989171 & +0.00362690 \\
+0.50 & Bookshelves & 0.00025379 & 0.03958590 & +0.00208649 \\
+0.75 & Neutral gray & 0.00049196 & 0.02898531 & +0.02188858 \\
+0.75 & Living room & 0.00294859 & 0.00498540 & +0.00118987 \\
+0.75 & Office & 0.00028360 & 0.00910379 & -0.00167774 \\
+0.75 & Bookshelves & 0.00019994 & 0.03295755 & +0.00767250 \\
+1.00 & Neutral gray & 0.00035368 & 0.03368190 & +0.00596030 \\
+1.00 & Living room & 0.00032044 & 0.00437642 & +0.00970811 \\
+1.00 & Office & 0.00028989 & 0.01294989 & +0.00945719 \\
+1.00 & Bookshelves & 0.00019713 & 0.02003348 & +0.01551880 \\
+\bottomrule
+\end{tabular}
+\caption{Actual supplementary scores. These are altered-background conditions,
+\emph{not the original input}. None of these rows is substituted for the
+original-image scores in Figure~\ref{fig:original}.}
+\end{table*}
+
+CLIP ViT-B/32 uses three classes (unclothed depiction, clothed person, and no
+person), each with three fixed descriptions. Its margin is mean cosine
+similarity to the unclothed class minus the larger of the other two class
+means; the fixed decision is margin $>0$. Generic and art-aware descriptions
+are recorded in the frozen specification. The ordinary oracle-crop condition
+was added after the initial smoke test and is identified as a diagnostic
+rather than a pre-registered primary condition.
+
+At scale 0.75, the same foreground changes from a positive art-aware margin on
+gray to a negative one in the office. This is background-associated
+sensitivity, not a demonstration of a universal best evasion background.
+At scale 0.50 the direction differs. Mean-color and block-shuffle controls also
+show that low-level statistics can matter; the experiment does not isolate a
+pure semantic-context effect.
+
+\subsection{Recovery has false-positive costs}
+
+\begin{table*}[tp]
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+CLIP condition, 180 composites & TP/FN & FP/TN & Recall & FPR & Accuracy \\
+\midrule
+Generic full image & 16/14 & 15/135 & 53.33\% & 10.00\% & 83.89\% \\
+Art-aware full image & 20/10 & 0/150 & 66.67\% & 0.00\% & 94.44\% \\
+Generic oracle artwork & 30/0 & 90/60 & 100.00\% & 60.00\% & 50.00\% \\
+Art-aware oracle artwork & 30/0 & 30/120 & 100.00\% & 20.00\% & 83.33\% \\
+\bottomrule
+\end{tabular}
+\caption{The complete supplementary crop diagnostic, including failures.
+The artwork region is manually known. Conditions are correlated within source.}
+\end{table*}
+
+All 30 false positives of the art-aware crop come from the rocket source.
+The generic crop additionally misclassifies the cat and coffee, each in 30
+conditions. Thus crop-based recall gains are not a free accuracy improvement.
+For the original alone, generic/art-aware full-image margins are
+$-0.00601779/-0.00533542$; the corresponding oracle-artwork margins are
+$+0.02146989/+0.02424490$. This diagnostic does not form part of the primary
+Luna method, which receives the original image directly.
+
+On the same 18 inputs as Table~\ref{tab:matched}, the generic and art-aware
+oracle conditions have TP/FN $13/0$ in both cases, FP/TN $3/2$ and $1/4$,
+and accuracies $83.33\%$ and $94.44\%$. Their FPRs are $60\%$ and $20\%$.
+The two full-image CLIP FPRs are $40\%$ and $0\%$; their balanced accuracies
+are $53.08\%$ and $88.46\%$. The Luna review has BA $100\%$ on this
+exploratory set. These figures share a content label, unlike native NSFW scores.
+
+NudeNet's core-body-part proxy detects 0/30 artwork conditions and alarms on
+0/150 benign conditions. This is a proxy, not a task-matched nudity accuracy
+estimate. The maximum Falconsai and AdamCodd NSFW scores among the 30 artwork
+conditions are approximately 0.00294859 and 0.05213738.
+
+\subsection{Visibility measurements}
+
+\begin{table*}[tp]
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Scale & Reference area / frame & Falconsai effective pixels & AdamCodd effective pixels \\
+\midrule
+0.50 & 0.9025\% & 447 & 1334 \\
+0.75 & 2.0247\% & 1008 & 2993 \\
+1.00 & 3.6076\% & 1816 & 5319 \\
+\bottomrule
+\end{tabular}
+\caption{Coarse reference visibility, not sexual severity. At a fixed scale,
+reference-region RGB hashes after each ViT's actual preprocessing agree across
+backgrounds. The mask was provided by the research agent.}
+\end{table*}
+
+\section{Input identity, runtime, and evidence inventory}
+\label{app:repro}
+
+\paragraph{Original-image identity.}
+The original JPEG, the figure asset, and Luna input \texttt{S04} all have the
+following SHA-256 (shown on two lines):
+\begin{quote}\ttfamily\small
+93a42b0c2b069cbd9363cf116b0d990d\\
+055975376e9cde8951f8a12bcce506ac
+\end{quote}
+
+\paragraph{Model provenance.}
+The following repositories and revisions were frozen:
+\begin{itemize}\small
+\item Falconsai export: \path{onnx-community/nsfw_image_detection-ONNX}\\
+\texttt{1ceb3c7fe1e9f3f2507e}\allowbreak\texttt{6df577437f23a9149fd5}.
+\item AdamCodd: \path{AdamCodd/vit-base-nsfw-detector}\\
+\texttt{8587de998f441aac03fd}\allowbreak\texttt{d57a85d2e4cb808c7d64}.
+\item CLIP revision: \texttt{d15189d7028b43f1d3e6}\allowbreak\texttt{5039190477f6af591c2a}.
+\end{itemize}
+The JSON metadata records repository identifiers and SHA-256 hashes of actual
+weights and preprocessing configuration. All local ONNX inference uses CPU,
+four intra-operation threads, and one inter-operation thread. The ViT input
+sizes are $224\times224$ and $384\times384$; NudeNet uses its native 320-pixel
+pipeline. The local runtime includes ONNX Runtime 1.24.4, NumPy 1.26.4,
+Pillow 12.2.0, and NudeNet 3.4.2.
+
+\paragraph{Review records.}
+The research bundle retains \path{plain_results.json},
+\path{reference_labels.json}, and \path{inputs/order.json} under
+\path{experiments/luna_audit/}. The requested model name is
+\texttt{gpt-5.6-luna}, not an image-service alias. The context viewed all 18
+images sequentially. We did not collect independent per-image repetitions,
+billing latency, or sampling controls. The English manuscript does not imply
+that the Chinese review instructions were rerun in English.
+An additional context-reminder condition is archived in the research bundle;
+it changed none of the 18 content labels and is omitted from the main comparison.
+
+\paragraph{Raw detector and auxiliary records.}
+Files \path{image_falconsai.jsonl}, \path{image_adamcodd.jsonl},
+\path{image_nudenet.jsonl}, and \path{strategy_scores.jsonl} are stored
+under \path{experiments/results/}, alongside \path{image_manifest.json}
+and model metadata. There are 211 records per model. Twelve auxiliary images
+without an oracle artwork region have no crop result; exports mark those
+fields as not run rather than filling them with fabricated scores.
+
+\paragraph{Historical outputs and service availability.}
+Two historical restoration outputs were byte-verified but are not independent
+source artworks. Their Falconsai scores are 0.00016741 and 0.00015874, and
+their AdamCodd scores are 0.00612020 and 0.00463306. The current experiment
+generated no new API image: authenticated attempts returned HTTP 429 with
+image quota unavailable. This is an infrastructure limitation, not a safety
+refusal or an observed attack success. No service credentials appear in the
+manuscript or its evidence tables.
+
+\paragraph{Template and draft status.}
+This local, unsubmitted manuscript uses the unmodified official ACL style
+and bibliography files from \url{https://github.com/acl-org/acl-style-files}.
+The template revision and build instructions are supplied locally.
+Publication rights for the user-provided image and author metadata must be
+resolved before submission or redistribution.
+
+\end{document}

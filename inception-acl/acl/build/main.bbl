@@ -1,0 +1,57 @@
+\begin{thebibliography}{7}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{{Google Cloud}(2026)}]{safesearch}
+{Google Cloud}. 2026.
+\newblock \href {https://cloud.google.com/vision/docs/detecting-safe-search}
+  {Detect explicit content ({SafeSearch})}.
+\newblock Cloud Vision documentation; accessed September 5, 2026.
+
+\bibitem[{Helff et~al.(2024)Helff, Friedrich, Brack, Kersting, and
+  Schramowski}]{llavaguard}
+Lukas Helff, Felix Friedrich, Manuel Brack, Kristian Kersting, and Patrick
+  Schramowski. 2024.
+\newblock \href {https://arxiv.org/abs/2406.05113} {{LlavaGuard}: An open
+  {VLM}-based framework for safeguarding vision datasets and models}.
+\newblock \emph{arXiv preprint arXiv:2406.05113}.
+
+\bibitem[{{notAI-tech}(2026)}]{nudenet}
+{notAI-tech}. 2026.
+\newblock \href {https://github.com/notAI-tech/NudeNet} {{NudeNet}: Lightweight
+  nudity detection}.
+\newblock Software documentation; evaluated package version 3.4.2; accessed
+  September 5, 2026.
+
+\bibitem[{Qu et~al.(2024)Qu, Shen, Wu, Backes, Zannettou, and
+  Zhang}]{unsafebench}
+Yiting Qu, Xinyue Shen, Yixin Wu, Michael Backes, Savvas Zannettou, and Yang
+  Zhang. 2024.
+\newblock \href {https://arxiv.org/abs/2405.03486} {{UnsafeBench}: Benchmarking
+  image safety classifiers on real-world and {AI}-generated images}.
+\newblock \emph{arXiv preprint arXiv:2405.03486}.
+
+\bibitem[{Ren et~al.(2025)Ren, Chen, Cui, Zeng, Liu, Xing, Tang, and
+  Lyu}]{sixcd}
+Jie Ren, Kangrui Chen, Yingqian Cui, Shenglai Zeng, Hui Liu, Yue Xing, Jiliang
+  Tang, and Lingjuan Lyu. 2025.
+\newblock \href {https://arxiv.org/abs/2406.14855} {{Six-CD}: Benchmarking
+  concept removals for text-to-image diffusion models}.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition}.
+
+\bibitem[{Riccio et~al.(2024)Riccio, Curto, Hofmann, and Oliver}]{artcentric}
+Piera Riccio, Georgina Curto, Thomas Hofmann, and Nuria Oliver. 2024.
+\newblock \href {https://arxiv.org/abs/2409.17156} {An art-centric perspective
+  on {AI}-based content moderation of nudity}.
+\newblock In \emph{ECCV Workshop on Artificial Intelligence for Visual Arts}.
+
+\bibitem[{Schramowski et~al.(2023)Schramowski, Brack, Deiseroth, and
+  Kersting}]{sld}
+Patrick Schramowski, Manuel Brack, Bj{\"o}rn Deiseroth, and Kristian Kersting.
+  2023.
+\newblock \href {https://arxiv.org/abs/2211.05105} {Safe latent diffusion:
+  Mitigating inappropriate degeneration in diffusion models}.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition}.
+
+\end{thebibliography}

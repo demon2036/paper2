@@ -1,0 +1,113 @@
+\subsection{Ablation outcomes}
+\label{sec:ablationoutcomes}
+
+\textbf{Every level of the sweep is judged by where its attempts end, not by
+whether they return an image.} The sweep submits each level of each axis with
+all three body configurations, and the gateway keeps a record of every task it
+was handed, including the ones whose replies never arrived.
+Figure~\ref{fig:sweep} reports that record. Three outcomes are distinguished:
+the request is declined outright, the request succeeds but the generated image
+is withheld, and the attempt does not conclude at all.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_sweep_45.png}
+\caption{\textbf{Where each attempt of the ablation sweep ended.} Each row is
+one level of one axis. Segments count attempts, and the right-hand figure gives
+images returned over resolved attempts at that level. Grey attempts have not
+concluded and are not counted as refusals; a level with a wide grey band has
+mostly not been measured, which the figure is drawn to make visible rather than
+absorb into a rate.}
+\label{fig:sweep}
+\end{figure}
+
+The two refusal kinds are not interchangeable. A declined request is stopped
+before a picture exists, so its rate says nothing about the requested
+composition. A withheld output was drawn and then rejected, so its rate is
+evidence that the composition itself carried the refusal. Counting both into a
+single refusal rate would merge two different findings, and counting only
+returned images discards the more informative of the two.
+
+\textbf{The column that separates the axes from the comparison arms is the
+declined-request column.} The axis levels decline few requests and return
+almost no images; the comparison arms decline many, and they account for every
+image the sweep returns. This is the pattern the method section predicts: the
+axes change how the requested figure is dressed, which leaves the request still
+reading as a request for the same picture, whereas the comparison arms change
+what is being asked for. Re-dressing the composition does not alter whether the
+prompt layer stops the request, and altering that does not by itself return a
+picture.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\linewidth}{@{}Xrrr@{}}
+\toprule
+Arm & Images & Declined & Withheld \\
+\midrule
+Axis levels (seven axes) & 9/83 & 1 & 68 \\
+Comparison arms (five) & 4/45 & 12 & 27 \\
+\midrule
+Fisher exact, declined requests & \multicolumn{3}{r}{$p < 0.0001$} \\
+Fisher exact, images returned & \multicolumn{3}{r}{$p = 1.000$} \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{The two arms differ in where their refusals happen, not in
+how often a picture comes back.} Denominators are attempts. The arms are
+indistinguishable on image return and separated by a wide margin on declined
+requests.}
+\label{tab:arms}
+\end{table}
+
+\textbf{The comparison arms are counted on the same footing as the axes.}
+Against the four prior-work arms, the method of this paper returns four images
+in twelve attempts while the four return none in forty-eight; the pooled
+comparison is in Table~\ref{tab:arms} and the four are counted individually in
+Appendix~\ref{app:ablationdetail}. The difference is large enough to read from
+these counts alone, and the unit is the one used everywhere else in this paper:
+one attempt is one submission.
+
+\subsection{Why elapsed time is not used}
+\label{sec:notiming}
+
+An earlier version of this analysis classified refusals by how long they took: a
+refusal inside ninety seconds was read as a request stopped before generation,
+and a slower one as a generated image withheld. That rule is withdrawn, and
+Figure~\ref{fig:rules} shows why.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.86\linewidth]{figures/fig_rules_45.png}
+\caption{\textbf{The same attempts under two classification rules.} The
+retired rule moves forty-three attempts from one group into the other. Elapsed
+time measures how long a request waited before an account picked it up, which
+depends on the queue and on the account pool rather than on the prompt.}
+\label{fig:rules}
+\end{figure}
+
+The rule fails on its own terms. The same cell, with the same refusal text, was
+once answered in 54 seconds and once in 1896. Across cells, the ratio between a
+level's fastest and slowest refusal reaches two orders of magnitude. Timing
+therefore does not separate the two refusal kinds, and any rate computed on it
+describes the queue rather than the content. The classification used here reads
+the refusal text, and the two phrasings are distinct: one declines the request,
+the other objects to the image that was produced.
+
+\textbf{No number in this paper depends on timing.} Returned images are counted
+as images; refusals are counted by their wording; attempts that reach no outcome
+are reported separately and excluded from every denominator. The gateways lose
+requests at very different rates, which is why the denominator is attempts
+rather than resolved judgements: over attempts the two gateways agree, and over
+judgements they differ by an order of magnitude.
+
+\textbf{What the sweep does and does not establish.} It establishes that the
+axis levels behave alike on the outcome that matters, so the axes do not rank
+against one another, and that the comparison arms differ from the axes in where
+their refusals occur. It does not establish an ordering among the axis levels.
+At the coverage reached so far, the per-level counts are too small to separate a
+level that returns pictures at an elevated rate from a baseline that returns
+few: a two-sided test over the resolved levels finds no level distinguishable
+from the pooled baseline, and the counts needed to change that are several times
+what has been collected.
+

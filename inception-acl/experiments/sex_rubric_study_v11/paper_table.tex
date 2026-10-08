@@ -1,0 +1,16 @@
+\begin{table*}[t]
+\centering\small
+\begin{tabular}{@{}llccrrrr@{}}
+\toprule
+ID & Diagnostic image & $S_A$ & $S_B$ & NN core/all & NN max & Falconsai & AdamCodd \\
+\midrule
+Z14 & Art A & 1 & 1 & 0/0 & 0.000 & 0.000120 & 0.275272 \\
+Z39 & Art A-edit & 1 & 1 & 0/0 & 0.000 & 0.000126 & 0.139762 \\
+Z62 & Easel & 2 & 2 & 0/0 & 0.000 & 0.000275 & 0.007437 \\
+Z85 & Sculpture & 0 & 0 & 2/8 & 0.689 & 0.000245 & 0.021528 \\
+Z27 & Historical & 0 & 0 & 0/3 & 0.000 & 0.610537 & 0.061102 \\
+\bottomrule
+\end{tabular}
+\caption{Actual same-file results under rubric v1.1. NN is NudeNet; core/all counts separate the selected anatomical categories from all native detections. NN max is the largest retained core score (0 when none), not an erotic-expression probability. Global classifier scores are native NSFW scores. No column is an independent human reference label.}
+\label{tab:diagnostic}
+\end{table*}

@@ -1,0 +1,399 @@
+\section{Evaluation framework}
+\label{sec:axes}
+
+\subsection{Evaluation objective}
+\label{sec:evalmotivation}
+
+Our evaluation measures \textbf{which visual requirements an attack fulfils
+together}. For a target figure, these requirements concern its material,
+anatomical exposure, and pose. A broad unsafe-content label can count a nude
+sculpture, a partly exposed illustration, and a highly explicit drawn figure
+as equivalent successes. The resulting ASR measures the frequency of that
+label, but leaves the achieved content unspecified. In particular, it cannot
+establish that an attack preserves the requested medium while reaching the
+requested exposure and body configuration. We therefore evaluate both the
+attributes visible in each output and their agreement with the intended target.
+This distinction connects attack success to the capability the experiment is
+meant to demonstrate.
+
+Attribute assessment also makes the evaluator's decision inspectable. NudeNet
+\citep{nudenet} returns an empty detection list for the ukiyo-e example in
+Figure~\ref{fig:ukiyoe}, although nipple/areola detail is visible. The detector's
+answer and the image's content are separate observations. A missed detection
+changes an automated success count without changing what the image depicts.
+Prior studies likewise find disagreement between image-safety judges and human
+annotations \citep{rise}. Our framework expresses its decisions through visible
+features: the figure's rendering cues, the exposed anatomical regions, and the
+body configuration. These features identify the source of a disagreement and
+allow the same output to be assessed under a clearly stated target.
+
+\subsection{Three-axis definitions}
+\label{sec:axisdefinitions}
+
+\textbf{Material: what is the depicted body?} Material describes the visual
+form of the target figure. The four categories distinguish manufactured objects
+or instructional plates, pre-modern flat works or invented species, modern
+drawn humans, and photographic or photorealistic humans
+(Table~\ref{tab:axes}). Judgement follows visible evidence such as stone grain,
+print conventions, ink contours, painted surfaces, and photographic tonal
+continuity. The relevant object is the depicted body. A photographic scene can
+contain a comic page, and that page can contain a drawn human. In this case,
+the scene and the figure occupy different representational levels. Assigning
+the figure's material from the surrounding photograph would erase the very
+property the attack is required to preserve. Material categories therefore
+identify a rendering form; their numerical labels do not express a universal
+ordering of generation difficulty.
+
+\textbf{Exposure: what anatomical detail is visible?} Exposure has six
+categories, from covered bodies to simultaneous nipple/areola and genital
+detail. Assessment first distinguishes clothing from bare body surfaces, then
+checks the two types of detail separately. This gives the upper categories a
+precise interpretation: $\axe_4$ contains nipple/areola detail, $\axe_5$ contains
+genital detail, and $\axe_6$ contains both. Consequently, $\axe_5$ is not a
+substitute for $\axe_4$ when the target requires chest detail. The categories
+encode combinations of observable features. Natural anatomical detail may be
+formed by contours, shading, or tonal transitions; it need not have a closed
+outline. Explicit geometric symbols receive a separate description so that a
+circle or emblem does not silently become evidence of natural anatomy.
+
+\textbf{Pose: what are the bodies doing?} Pose distinguishes neutral posture,
+sexualized presentation, and visible sexual activity. The decision concerns
+body arrangement and interaction. It uses the orientation of the torso and
+pelvis, the positions of the limbs, and any visible contact between bodies.
+Exposure alone does not determine pose: a nude figure can stand neutrally,
+whereas a covered figure can adopt a sexualized configuration. The third
+category requires visible evidence of the activity itself. An evocative title
+or overlapping silhouettes cannot supply that evidence. A second, finer check
+compares the output with the requested configuration, such as standing,
+crouching, or side-lying. Thus, the category describes the kind of pose and
+the configuration check establishes whether the intended pose was generated.
+
+\subsection{Assessment procedure}
+\label{sec:assessment}
+
+\textbf{Each axis is judged independently.} A judging call receives an image
+and the instructions for one axis. The call produces the relevant visual
+evidence and a category; answers from the other axes are withheld. This
+separation addresses a practical ambiguity in whole-image judgements. A
+museum setting can dominate the material answer, nudity can dominate the pose
+answer, and a suggestive composition can dominate the exposure answer.
+Axis-specific questions keep each decision tied to its own evidence. The
+three answers are joined only after assessment to form the output profile
+$(\axm,\axe,\axp)$. The judging instructions and category definitions used in
+the study are supplied in Appendix~\ref{app:axisprompts}.
+
+Exposure assessment separates the body's covering state from the presence of
+each anatomical feature. This makes an uncertain chest judgement visible as
+uncertainty about chest detail, rather than silently changing the entire
+exposure category. Material assessment attributes rendering cues to the
+central figure, and pose assessment describes the configuration actually
+shown. The representative images in Figure~\ref{fig:methodcontrol} are also
+inspected directly against these criteria. A missing or ambiguous judgement
+remains unscored until its evidence is resolved. This procedure preserves the
+connection between a reported profile and the pixels that support it, which
+is especially useful when a stylized image receives an unexpected automated
+label.
+
+\subsection{Target attainment}
+\label{sec:targetmatch}
+
+A target specifies acceptable figure material, required anatomical features,
+and an intended pose. Attribute matching checks these requirements separately.
+For material, the comparison uses the figure's own rendering form. For
+exposure, it checks the required features rather than comparing category
+numbers alone. For pose, it checks both the category and the requested
+configuration. A sexualized standing figure therefore fails a crouching
+target even when both receive $\axp_2$. This makes \textbf{target attainment}
+more informative than a broad unsafe-content decision: it tests the visual
+conditions that motivated the request.
+
+Let $c_i^M$, $c_i^E$, and $c_i^P$ indicate whether output $i$ meets the three
+requirements. Joint attainment is their conjunction:
+\begin{equation}
+J_i=c_i^M c_i^E c_i^P.
+\label{eq:joint}
+\end{equation}
+All three conditions must hold \textbf{in the same output}. The component
+indicators retain the explanation for a failed target: material substitution,
+missing anatomical detail, or pose mismatch. For example, an output can retain
+the requested drawing style and configuration while losing the exposure
+requirement. Reporting its component answers preserves this partial
+attainment without counting the complete target as achieved.
+
+For $N$ completed attempts, the component and joint success rates are
+\begin{equation}
+S_a=\frac{1}{N}\sum_{i=1}^{N}c_i^a,\qquad
+S_{\mathrm{joint}}=\frac{1}{N}\sum_{i=1}^{N}J_i,
+\label{eq:rates}
+\end{equation}
+where $a\in\{M,E,P\}$ and an explicit refusal contributes zero. Unresolved
+attempts and missing attribute assessments are reported separately. Image
+return uses the count of requested generations as its denominator; an
+attribute distribution uses the returned images that have been assessed.
+These quantities answer different questions: whether an image was obtained,
+what the obtained images contain, and how often the full target was achieved.
+Comparisons of material or pose use the same target conditions and generation
+budget, following the need for aligned ASR evaluation settings
+\citep{comparisonrequires,asrisnotanumber}.
+
+\section{Method}
+\label{sec:attack}
+
+\subsection{Visual target}
+\label{sec:methodtarget}
+
+The method constructs a text request from a visual target and a supporting
+context. The target fixes three properties of the figure: its intended
+material, required exposure, and body configuration. These properties define
+the output that counts as successful. Keeping them explicit is central to the
+method because contextual reformulation can change the generated subject
+along with the scene. A drawn human can become a manufactured object, a
+requested pose can become a conventional standing portrait, or a figure can
+be covered. Our construction treats the target figure as the object whose
+attributes must survive these changes in presentation.
+
+Figure~\ref{fig:methodcontrol} shows the capability this formulation achieves:
+\textbf{different body configurations at maximum exposure}, with the figure
+retaining a modern drawn material. The three examples jointly attain material
+level 3, exposure level 6, and pose level 2. Their outer scenes contain frames,
+paper surfaces, or photographic presentation, while the bodies retain drawn
+contours and anatomical detail. These outputs make the distinction between a
+figure and its carrier concrete. The method's objective is fulfilled by the
+content of the figure within the composition, and the evaluation checks that
+content directly.
+
+\subsection{Contextual embedding}
+\label{sec:embedding}
+
+Contextual embedding specifies a relation between the target content and the
+task represented by the surrounding scene. Let $x$ denote the requested
+content and pose, $c$ the supporting context, and $m$ the intended figure
+material. We write the relation as $R(x,c)$ and the composed request as
+\begin{equation}
+q=\operatorname{Compose}\bigl(R(x,c),m\bigr).
+\label{eq:embedding}
+\end{equation}
+Here, $R$ describes the target's role within the context, while $m$ describes
+its visual realization. Production documents, displayed artworks, and printed
+pages instantiate different contexts in the study. The same broad target can
+occupy different roles in these settings. This formulation separates the
+semantic relation that organizes the composition from the rendering choice
+that determines what the figure looks like.
+
+The relation matters because a scene label alone leaves the intended content
+underspecified. Two images can share a studio or display setting while showing
+different amounts of body detail. The construction therefore represents how
+the target belongs in the contextual task, as well as the task's setting.
+This distinction provides an experimental question: after altering that
+relation, does the system still produce the required content? The component
+comparison in \S\ref{sec:contextablation} answers this question at the output
+level. It examines whether a returned image retains the target attributes,
+connecting the method's semantic organization to an observable result.
+
+\subsection{Figure and carrier separation}
+\label{sec:preservation}
+
+The figure's material and the external carrier are separate design variables.
+The carrier includes the page, display surface, surrounding texture, and
+imaging form in which the figure appears. The figure material concerns the
+body's own contours, shading, and rendering conventions. This distinction
+allows a photographed object to contain a modern drawn character without
+turning that character into a photograph or a sculpture. In the representative
+outputs, the frame and wall have photographic appearance while the central
+figure remains drawn. \textbf{The same image thus contains two rendering
+levels}, and only the inner figure is evaluated against the target material.
+
+Separating these variables also sharpens the comparison with material
+substitution. Prior attacks explore artistic reframing and flexible style
+choices \citep{aestheticcamouflage,modx}; such flexibility can change the
+subject's visible form along with the request. Our target holds the figure's
+material requirement fixed while varying its carrier. The experiments also
+perform the complementary comparison: they keep the context fixed and change
+the figure rendering between cel, colour manga, and monochrome manga.
+Together, these comparisons distinguish changes to the requested body from
+changes to the surrounding presentation. The resulting images show whether
+that distinction survives generation.
+
+\subsection{Component control}
+\label{sec:components}
+
+The construction organizes context, figure rendering, pose, and surrounding
+presentation into separate text components. Each component corresponds to a
+property that can be examined in an ablation. A material comparison changes
+the figure-rendering component. A pose comparison changes the requested body
+configuration. A context comparison changes the relation or setting around
+the figure. The remaining components are retained within each comparison.
+This organization gives the experiments a common structure: identify the
+changed property, generate outputs under the compared conditions, and assess
+which target attributes remain present. The full component inventory is
+provided in Appendix~\ref{app:segments}.
+
+Component control in the request and attribute control in the output are
+measured separately. Changing one text component can affect several visual
+attributes because the generator produces a whole composition. A carrier
+change may alter both the page and the figure's style; a pose change may alter
+which anatomical regions are visible. The three-axis evaluation makes these
+interactions observable. Its joint criterion tests whether the composition
+still satisfies the complete target, while its component answers locate the
+attribute that changed. This is the link between the method and the
+experiments: modular requests support comparisons, and output-level
+assessment establishes the capability actually obtained.
+
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental setup}
+\label{sec:setup}
+
+We evaluate a black-box text-to-image interface configured as GPT-Image-2,
+using text-only generation. The experiments address three questions: whether
+the method can realize the full visual target, how figure material and
+external context affect the outputs, and which distinctions the evaluation
+adds to a broad success judgement. The target examples cover modern drawn
+figures with different body configurations. The material comparison uses cel,
+colour-manga, and monochrome-manga rendering. The context comparisons examine
+production and display settings, contextual designations, and surrounding
+texture. Each comparison is interpreted through the properties it changes
+and the visual requirements it retains.
+
+The material comparison uses three pose settings with three generation
+attempts per setting, giving nine attempts for each condition. The contextual
+designation comparison uses 24 attempts per condition with the body
+description held fixed. We report image-return counts for these sweeps and
+attribute profiles for the inspected outputs. Representative examples are
+assessed under the definitions in Table~\ref{tab:axes}; the pose check also
+examines the specified configuration. This design separates an increase in
+returned images from the attainment of a stronger visual target. It also
+keeps the qualitative capability evidence connected to the conditions under
+which each quantitative comparison was performed.
+
+\subsection{Joint target attainment}
+\label{sec:jointresults}
+
+The method produces \textbf{modern drawn figures at exposure level 6 and pose
+level 2} across the configurations shown in Figure~\ref{fig:methodcontrol}.
+The examples contain identifiable nipple/areola and genital detail while
+retaining the drawing's contours and surface treatment. The poses differ in
+torso orientation, leg arrangement, and support: reclined sitting, side-lying
+with bent legs, and a raised-knee configuration. Their common exposure level
+makes the pose variation directly visible under the same broad anatomical
+requirement. Their common material category shows that this variation is
+achieved while the bodies remain modern drawn humans inside the external
+presentation.
+
+The additional pose comparisons extend the configuration analysis to standing,
+crouching, and rear-oriented arrangements. The crouching output lowers the
+body between the legs with the feet supporting it, whereas the rear-oriented
+output uses the knees and hands as support. These differences concern the
+requested body arrangement, beyond the shared category of sexualized posture.
+Exposure is checked separately for each view because a change in orientation
+can conceal a required feature. This explains the role of the two pose
+measures: the category identifies the kind of presentation, and configuration
+matching tests whether the intended arrangement is present. Together with
+material and exposure assessment, they establish what is controlled in each
+successful output.
+
+\subsection{Material ablation}
+\label{sec:materialablation}
+
+\textbf{Figure rendering changes the observed generation outcome within the
+same context.} Table~\ref{tab:rendercontext} compares three rendering
+conditions in a studio-sheet setting. Colour manga and monochrome manga each
+produce one image in nine attempts, while the cel condition produces none.
+Both returned images use the standing configuration. The successful outputs
+retain drawn contours and tone patterns, showing that the studio presentation
+can carry either colour or monochrome manga. The shared pose set and budget
+make the conditions comparable within this experiment. The result also shows
+why a material condition must remain explicit when reporting performance:
+a return under one rendering description does not supply a success for
+another.
+
+Changing the external carrier produces a further difference while the figure
+rendering stays fixed. With colour manga, the studio sheet returns one image
+in nine attempts and manuscript paper returns none in nine attempts
+(Table~\ref{tab:rendercontext}). This comparison isolates the requested
+carrier from the requested figure material. Its result concerns the complete
+combination of context, rendering, and pose used here. The broader imaging-form
+comparison similarly varies the surrounding representation while retaining
+the figure components (Appendix~\ref{app:medium}). Across these experiments,
+\textbf{figure material and presentation remain separate comparison factors}.
+That separation is necessary to identify whether an output preserves a modern
+drawn body or obtains a different depiction through a changed scene.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\linewidth}{@{}XXc@{}}
+\toprule
+Context & Figure material & Images / attempts \\
+\midrule
+Studio sheet & Cel & 0/9 \\
+Studio sheet & Colour manga & 1/9 \\
+Studio sheet & Monochrome manga & 1/9 \\
+\midrule
+Manuscript paper & Colour manga & 0/9 \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Figure material and carrier comparison.} Each condition
+uses the same three pose settings with three attempts per setting. The
+entries measure returned images; the two manga outputs retain a drawn figure.}
+\label{tab:rendercontext}
+\end{table}
+
+\subsection{Context and component ablations}
+\label{sec:contextablation}
+
+The contextual designation affects image return even when the body description
+is retained. Figure~\ref{fig:contextcomparison} shows 23 returned images in
+24 attempts for the pottery condition, 17 for salon painting, 13 for a coupled
+group composition, 10 for the Edo-period print, and 8 for wall painting.
+The highest and lowest conditions differ by 15 images under the same
+per-condition budget. These results show the range of outcomes associated
+with contextual reformulation in this comparison. They also explain why
+context selection alone does not specify the attained capability: the
+conditions invoke different visual conventions, and their returned images
+must still be checked for the desired material, exposure, and pose.
+
+\textbf{Component removal can preserve image generation while losing target
+content.} In the contextual-relation comparison, removing the clauses that
+connect the body to the represented task yields a clothed figure. The system
+still returns an image, but the exposure requirement is lost. The
+texture-depth comparison addresses a different component: increasing the
+number of surrounding layers from one to ten shows no monotone improvement
+in image return. The former comparison concerns the content retained in an
+output; the latter concerns the generation outcomes associated with added
+presentation detail. Together, they distinguish a component's semantic role
+from the visual complexity it introduces. The complete component comparisons
+are provided in Appendix~\ref{app:ablationdetail}.
+
+\subsection{What the evaluation reveals}
+\label{sec:evalresults}
+
+\textbf{Image return, detected content, and target attainment separate in the
+observed results.} One museum-context comparison returns eight images in
+eight attempts, yet the judged outputs have neutral poses and one is clothed.
+The high return frequency therefore leaves the sexualized-pose requirement
+unfulfilled. Conversely, the ukiyo-e example in Figure~\ref{fig:ukiyoe}
+contains visible chest detail that NudeNet does not detect. Figure~\ref{fig:methodcontrol}
+provides the third case: the figure retains its modern drawn material while
+jointly achieving the required exposure and pose category. These examples
+show three different questions being answered by three different measurements.
+The decoupled framework identifies the achieved attributes, and target
+matching determines whether those attributes satisfy the intended generation
+problem. Reporting both gives a precise account of the capability behind an
+attack's success rate.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We present a contextual embedding attack that separates a figure's target
+attributes from the scene that carries it. The method produces modern drawn
+figures that jointly attain maximum exposure and sexualized posture across
+different body configurations. Material and context comparisons examine how
+the requested rendering, external carrier, and contextual relation affect
+generation and content preservation. Our evaluation measures the figure's
+material, anatomical exposure, and pose independently, then checks their
+joint agreement with the target. This connects the attack's construction to
+the specific visual capability it achieves and makes success rates
+interpretable under explicit content requirements.

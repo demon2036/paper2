@@ -1,0 +1,221 @@
+\section{Instrument detail}
+\label{app:instrdetail}
+
+The axis definitions are in Table~\ref{tab:axes}. The full operational judging
+prompts and historical anchor rules are preserved in Appendix~\ref{app:axisprompts}.
+
+
+\section{Positioning, and the mechanisms bounded}
+\label{app:positioning}
+
+\begin{table*}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+Work & What it manipulates & Specific assumption this paper does not share \\
+\midrule
+\citet{sneakyprompt} & prompt tokens (RL search) & Optimises the lexical surface; a token substitution has a bounded search space and is reportable as a rate. \\
+\citet{mmadiffusion}, \citet{ringabell} & weights or concept scores & White-box. We hold no gradients, weights or scores. \\
+\citet{janus} & distribution, image filter folded in & Our evaluation additionally reports which material, exposure, and pose requirements the output meets. \\
+\citet{universalperturb}, \citet{clipproxy} & pixels, directly & Require pixel control. \S\ref{app:noise} measures what remains when the attacker may only \emph{ask} for the perturbation, in this rendering style. \\
+\citet{aestheticcamouflage}, \citet{etch} & semantics, style & Nearest prompt-level relatives; neither manipulates the language description of an \emph{imaging artefact} as carrier, nor reports how the content produced is scored. \\
+\citet{visualjailbreak} & editing models, 15 categories & Genuinely multi-dimensional, but the dimensions are \emph{labels for the output}, not separately assessed material, exposure, and pose requirements. \\
+\midrule
+\textbf{this paper} & the prompt's referential frame & No optimisation, no gradients, no pixels. We contribute the attack, the decoupled evaluation of target attainment, and a measured boundary on the two alternatives the literature reaches for first. \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Positioning.} The method and evaluation distinguish image
+generation from the joint attainment of specified visual attributes.}
+\label{tab:positioning}
+\end{table*}
+
+\section{Measurement detail}
+\label{app:measdetail}
+
+\section{Output profiles and batch records}
+\label{app:anticorrdetail}
+
+Batch-level records are provided in Appendix~\ref{app:ladder}; historical
+per-image judging outputs are in Appendix~\ref{app:instances}. These records
+support the distinction between image return and target attainment introduced
+in \S\ref{sec:evalmotivation}.
+
+\section{The length control}
+\label{app:lengthcontrol}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrll}
+\toprule
+Cell & Chars & Content & Result \\
+\midrule
+\texttt{A\_short}          & 101     & none    & \textbf{3/3 pass} (30.6/21.2/18.8\,s) \\
+\texttt{B\_long\_benign}   & 4{,}561 & none    & \textbf{3/3 pass} (30.1/26.8/29.0\,s) \\
+\texttt{C\_short\_content} & 629     & present & blocked (75.2/75.3\,s) \\
+\texttt{D\_long\_content}  & 4{,}561 & present & blocked \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Length is not the gate; content is.} The benign long cell is
+character-for-character the same length as the content long cell
+($4{,}561=4{,}561$, $0.00\%$ difference) and describes an unoccupied office with
+no body, no anatomy, no stance, no genre and no sensitive term. It passes $3/3$
+while the content cell blocks. The short content cell is one seventh the length
+of the control and still blocks.}
+\label{tab:length}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/figM_anchors.png}
+\caption{\textbf{Two failures of our own instrument, quantified.}
+(a) Anchor attendance on the 98-image re-judged corpus. \textbf{Four of the
+twelve anchors never, or almost never, fire}---most of the rule is unexercised
+on this corpus, which must be stated or a reader will take ``not observed'' for
+``does not occur''. (b) Displacement of the material reading under three
+observation arms on the same 20 images. Adding a mark moves the reading on 5;
+\emph{cropping the carrier away} moves it on 12. \textbf{Part of the material
+reading is supplied by the presentation rather than by the body}, showing why
+the depicted figure must be assessed separately from its presentation.}
+\label{fig:anchors}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/figO_judging.png}
+\caption{\textbf{Configuration effects that masquerade as findings.} (a) Our own
+first judging run used too small an output budget; the evidence field was
+truncated and 19 images were recorded as null, which we briefly read as model
+disagreement. With a larger budget the same batch returned the top level on 6/6
+and upper-range levels rose from 6 to 35. \textbf{Every missing field is a parse
+failure until proven otherwise.} (b) Repeat stability: five interleaved repeats
+give zero level and zero anchor flips, while duplicates separated in time across
+six rounds give 1 of 7 level flips and 3 anchor flips---\textbf{the time-dependent
+component concentrates in anchors that require interpretation rather than
+observation}.}
+\label{fig:judging}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/figQ_threat.png}
+\caption{\textbf{What the attacker has, and what the measurement can therefore
+be.} The attack is strictly black-box and text-only. \textbf{The attackable
+object is the response, not the decision behind it}, which is why this paper
+scores the image the endpoint returns rather than attempting to attribute a
+refusal to any particular filter.}
+\label{fig:threat}
+\end{figure}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figE_prompt_anatomy.png}
+\caption{\textbf{Prompt anatomy, and where each ablation acts.} Every prompt is
+assembled from six segments. Each sweep in this paper varies exactly one segment
+with the other five held byte-identical, which is what makes the comparisons
+single-variable. The three brackets below the segments mark the three independent
+ablations reported in \S\ref{app:ablationdetail}: the opening noun of the shell, the
+pose clause (75 distinct clauses tested), and the number of stacked texture layers
+in the carrier segment (ten layers are indistinguishable from one).}
+\label{fig:anatomy}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.94\textwidth]{figures/figF_outputs.png}
+\caption{\textbf{Outputs, by carrier.} Four passing images from the carrier sweep
+of Appendix~\ref{app:ablationdetail}, each retaining the full figure and reaching the
+exposure levels the instrument records. The carrier acts only outside the figure
+silhouette in every case; the figure itself is explicitly exempted by the recipe
+(\S\ref{app:noise}). These are outputs the endpoint returned with HTTP 200, shown
+at the resolution it returned.}
+\label{fig:outputs}
+\end{figure*}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}p{0.30\linewidth}p{0.62\linewidth}@{}}
+\toprule
+Extent & Claims in this paper \\
+\midrule
+\textbf{observed} &
+\fTotal{} logged requests with HTTP state, latency and error text; \fFiles{}
+result files across \fBatches{} batch directories; the retained output images; the
+prompt files with byte-level identity assertions for every ablation pair; the
+four-state census; the latency distributions; the noise calibration; and the
+out-of-band counter control. \\
+\midrule
+\textbf{not verified} &
+human construct validity; any provider's policy determination; the material axis
+(presentation confound); the top-tier round's three-axis judgement; the cause of
+the non-stationarity; and any statement about non-sexual NSFW categories. \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{What was measured, and what was not.} The two rows are disjoint;
+nothing in the second row is used to support a claim in the first.}
+\label{tab:extent}
+\end{table}
+
+
+\section{Target-control records}
+\label{app:targetrecords}
+
+The main-text examples use the saved outputs
+\texttt{runs151/R11\_r1.png}, \texttt{runs151/R13\_r3.png}, and
+\texttt{runs152/K34b\_r4.png}. The observations in
+Table~\ref{tab:targetoutputs} describe the images below. They retain the
+visible rendering style and body configuration as separate properties.
+Geometric chest marks are recorded explicitly.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.31\textwidth]{figures/target_standing.png}\hfill
+\includegraphics[width=0.31\textwidth]{figures/target_crouching.png}\hfill
+\includegraphics[width=0.31\textwidth]{figures/target_rear.png}
+\caption{\textbf{Original target-control outputs.} Left: batch 151, R11,
+repeat 1. Centre: batch 151, R13, repeat 3. Right: batch 152, K34b,
+repeat 4. These are the original images used for the attribute observations
+in Table~\ref{tab:targetoutputs}.}
+\label{fig:targetrecords}
+\end{figure*}
+
+Batch 156 contains 39 saved request records. Groups M, N, P, and G each
+contain three pose settings with three attempts per setting. Group Q contains
+three further pose-wording attempts. N11 and P11 each return one image;
+the other groups return none. Table~\ref{tab:rendercontext} uses groups
+M, N, P, and G. The source filenames and record hashes are frozen in
+\texttt{restructure\_evidence.json}. These records supplement the earlier
+corpus census rather than changing its frozen totals.
+
+\section{Supplementary component ablations}
+\label{app:ablationdetail}
+
+The historical component sweeps vary the opening context, texture depth,
+and carrier form separately. Their original summary is reproduced in
+Figure~\ref{fig:suppcomponents}. These measurements concern returned images;
+target-attribute attainment requires the separate checks in
+\S\ref{sec:targetmatch}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/figD_three_arms.png}
+\caption{\textbf{Component sweeps.} The panels vary the opening context,
+texture-layer count, and carrier form. Each panel represents its own batch;
+the layer sweep covers one through ten layers.}
+\label{fig:suppcomponents}
+\end{figure}
+
+
+\section{Method showcase records}
+\label{app:methodoutputs}
+
+Figure~\ref{fig:methodcontrol} reproduces three saved generation outputs:
+(a) \texttt{runs69/K\_seated\_lean\_r3.png},
+(b) \texttt{runs81/S2\_r2.png}, and
+(c) \texttt{runs74/lie\_one\_knee\_up\_r4.png}.
+The prior image-level assessments in \texttt{gallery/\_expo\_judge.json}
+record exposure level 6 for all three; the curated collection records pose
+level 2. Reinspection of the original images confirms a modern drawn central
+figure, identifiable nipple/areola and genital detail, and a sexualized posture
+without visible sexual activity. Panel labels describe the visible configurations.
+The source paths, file hashes, and per-image readings are preserved in
+\texttt{method\_showcase\_evidence.json}.

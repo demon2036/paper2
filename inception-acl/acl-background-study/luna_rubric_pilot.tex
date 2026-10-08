@@ -1,0 +1,42 @@
+\subsection{Executed semantic-rubric development pilot}
+\label{sec:rubric-pilot}
+
+We executed a small development pilot rather than inferring erotic expression
+from anatomical visibility. Three images were assessed in two independent
+contexts explicitly requesting \texttt{gpt-5.6-luna}. The contexts used the
+same rubric and reversed image order. Source names, method identifiers, and
+the author's preferred interpretation were withheld through instructions,
+not filesystem isolation. Each context inspected all three complete images.
+The supplied screenshot was treated as a visual stimulus; its interface does
+not establish generation provenance.
+
+The fixed rubric records erotic expression on an ordinal scale: no compelling
+orientation (0), weak or ambiguous suggestion (1), clear convergent expression
+(2), and strongly foregrounded sexual context or invitation (3). Grades 2 and
+3 require evidence from at least two distinct cue groups---pose staging,
+composition, expression/gaze, and depicted interaction---plus an explicit
+alternative explanation. Cue counting is necessary but not sufficient.
+Anatomical-detail visibility and depicted activity are separate fields.
+No angle, projected area, keypoint estimate, or uncalibrated confidence score
+is used.
+
+\input{../experiments/rubric_luna_v1/paper_table.tex}
+
+V08 is the prior full-scene print, V17 its small pose edit, and V42 the supplied
+artwork-on-easel screenshot. Both contexts ranked V42 above V08 and V17 and
+tied V08 with V17: all three pairwise outcomes agreed. Absolute grades did
+not agree on any image (0/3 exact agreement), although the $S\geq2$ grouping
+agreed on all three. Both contexts marked chest detail visible in V08/V17
+and not visible in V42; none was labeled as depicting sexual activity.
+Thus, in this development set, stronger judged erotic expression did not
+require visible chest detail. The absolute-grade shift also cautions against
+treating ordinal scores as calibrated magnitudes. We retain both raw runs
+and prioritize matched pairwise judgments for subsequent evaluation.
+
+This is an executed rubric-development observation, not human-validated
+accuracy, a held-out benchmark, a method-success comparison, or a causal
+background effect. Two images are same-source variants, the stimuli were
+seen during rubric development, and reversing order does not isolate order
+effects from model variability. The serving snapshot was not independently
+verified. The three pairwise decisions are correlated and must not be
+reported as independent statistical evidence of general superiority.

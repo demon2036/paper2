@@ -1,0 +1,66 @@
+\section{Introduction}
+\label{sec:intro}
+
+Text-to-image attacks can produce an unsafe image while changing the visual
+content that was requested. A nude sculpture, a partly exposed illustration,
+and an explicit drawn figure in a specified pose can all satisfy a broad
+unsafe-content criterion. They demonstrate different capabilities. For an
+attacker seeking a particular depiction, success requires the intended figure
+material, anatomical detail, and body configuration to occur together. This
+paper studies that joint requirement and introduces a contextual embedding
+attack that produces modern drawn figures with high exposure in multiple
+requested poses.
+
+Prior work explores token substitution, artistic reframing, material
+substitution, and semantic contexts to alter how a text-to-image system
+interprets a request \citep{sneakyprompt,aestheticcamouflage}. A reformulation
+can also alter the body that appears in the output. Rendering a human as
+marble changes its material; covering the body changes exposure; replacing a
+specified configuration with a standing portrait changes pose. These are
+substantive differences between the requested content and the generated
+result. Our method keeps the target figure's attributes explicit while
+varying the context that carries them.
+
+The method separates target content, supporting context, and intended figure
+material. Contextual embedding specifies the relation between the target
+content and the task represented by the surrounding scene. The material
+description specifies how the figure itself should appear. This separation
+allows a photographic outer scene to contain a drawn human, as in a
+photographed manga page. Production documents, displayed artworks, and
+printed pages provide different contexts for this relation. The generation
+objective is to retain the requested figure attributes within the resulting
+composition. Our outputs demonstrate the joint attainment of a modern drawn
+material, maximum exposure under our criteria, and sexualized posture across
+different body configurations.
+
+Material and context ablations examine the conditions under which the target
+survives. We compare figure-rendering choices within the same context and
+carrier choices with the figure rendering held fixed. Further comparisons
+change contextual components and requested poses. These experiments connect
+the construction to its outputs: a component may affect image return, the
+attributes retained in the image, or both. Separating the figure from its
+carrier is essential to interpreting these effects. A changed frame or paper
+surface can accompany a preserved drawing style, while an apparently
+successful generation can lose the requested exposure or configuration.
+
+Evaluating this capability requires more detail than an aggregate attack
+success rate (ASR). The rate measures success under a chosen criterion;
+it does not describe the mix of materials, exposure levels, and poses that
+contribute to that success. We therefore assess these three attributes
+independently and test their joint agreement with the target. Material
+assessment concerns the depicted body, exposure assessment concerns visible
+anatomical features, and pose assessment concerns body configuration and
+interaction. The resulting profile explains what each output achieves.
+Reporting joint attainment alongside its components makes attack success
+interpretable under explicit visual requirements.
+
+\paragraph{Contributions.}
+\textbf{(i) A contextual embedding attack.} A prompt-only black-box method
+that relates target content to a supporting context while preserving explicit
+requirements for the figure's material, exposure, and pose.
+\textbf{(ii) Material and context ablations.} Comparisons of figure rendering,
+external carriers, and contextual components, supported by outputs that
+jointly attain modern drawn material, maximum exposure, and sexualized posture.
+\textbf{(iii) A decoupled evaluation framework.} Independent assessment of
+material, exposure, and pose, combined with target matching to identify the
+specific capability behind an attack's success rate.

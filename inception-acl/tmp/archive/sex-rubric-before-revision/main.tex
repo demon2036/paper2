@@ -1,0 +1,370 @@
+\documentclass[11pt]{article}
+\usepackage[review]{acl}
+\usepackage{times,latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{graphicx,booktabs,amsmath,amssymb,tabularx,url}
+\hypersetup{hidelinks,pdftitle={Background Context and Sexual-Content Safety in Closed-Source Image Generation}}
+\title{Background Context and Sexual-Content Safety\\in Closed-Source Image Generation:\\Historical Evidence and a Controlled Evaluation Protocol}
+\author{Anonymous authors}
+\begin{document}
+\maketitle
+\begin{abstract}
+Does background context affect how closed-source image services handle sexual-content-related requests? We formulate a controlled evaluation that distinguishes sexualized presentation from nudity, subject changes, and policy violation. Our starting evidence comprises 235 historical chat2api task records and 133 distinct, hash-verified image artifacts, supplemented by an earlier input and two response-byte-verified outputs. The author reports individually reviewing the historical outputs as sexualized rather than merely nude. We combine this evidence with a source-disjoint paired evaluation design and a structured Luna-assisted assessment specification. The framework separates artifact integrity, human interpretation, model judgment, output fidelity, and service reliability. The historical audit is complete within its stated scope; the extended sexualization assessment and confirmatory background comparison remain unexecuted. We propose disaggregated reporting to prevent detector outputs or image-return counts from being mistaken for sexual-content success rates.
+\end{abstract}
+
+\section{Introduction}
+Image generation safety is ultimately experienced through a service: a user submits a request and receives an image, a refusal, or another response. Yet the evidence used to evaluate that safety often concerns a different object, such as the score of an external image classifier. The distinction matters for closed-source systems, whose internal moderation and generation stages are not directly observable. A returned image establishes delivery, whereas a low classifier score establishes only the output of that classifier. Neither observation alone determines whether the generated content is sexualized or whether the service has violated its stated policy.
+
+Sexual-content evaluation makes this measurement problem particularly visible. Nudity, erotic presentation, explicit anatomical visibility, and depicted sexual activity are related but different attributes. A detector designed to localize anatomical categories need not recognize the overall sexual meaning of a composition. Conversely, an unclothed depiction need not be erotic or prohibited. Prior work on artistic nudity highlights the importance of this distinction for moderation \citep{artcentric}. A study that reports a single NSFW score without specifying its semantic target risks measuring a different property from the one its claims concern.
+
+Background context introduces a second difficulty. The same intended subject can appear in different surrounding scenes, and those scenes can influence both the image that is produced and the interpretation of its content. Contextual sensitivity is already an established concern for NSFW safeguards \citep{contextshift}. However, an observed response difference admits several explanations: a change in background, a change in the subject or medium, a legitimate change in policy interpretation, or ordinary service variability. Distinguishing these possibilities is necessary before attributing a result specifically to background context.
+
+Our investigation begins with concrete historical observations rather than a hypothetical collection. A local chat2api archive contains 235 task records across 16 manifests, from which we verify 133 distinct image artifacts against their recorded hashes. The author reports individually reviewing all historical images and interpreting the generated outputs as sexualized or erotic rather than merely nude. An earlier visual case additionally contains one supplied input and two outputs whose bytes match archived response bodies. These materials establish a substantive retrospective evidence base. They do not, by themselves, establish independent sources, a controlled background comparison, or a request-level sexual-content success rate.
+
+We therefore ask: \emph{when intended subject content and policy meaning remain equivalent, does changing background context alter the observable handling of sexual-content-related requests by a closed-source image service?} The scope is deliberately narrow. We do not pool violence or other risk categories into the primary endpoint. We also do not treat statue conversion, a change of artistic medium, or historical storytelling as interchangeable with a background change. For text-only cases, equivalence is semantic; for image-conditioned cases, any claim of foreground preservation must be verified separately at the input and output levels.
+
+The sampling unit is an independent source-level request case, not a saved image: one intention can produce several files, including derived previews. Background equivalence must also be tested rather than inferred from similar wording. A service can alter focal content while preserving a recognizable scene, making output inspection essential even for tightly matched inputs.
+
+A particularly important consequence is that sexualized presentation must be assessed independently of the intended experimental outcome. The author may find an output erotic while a detector returns no boxes; this disagreement is a reason to inspect the constructs being measured, not to choose whichever judgment favors the hypothesis. Our existing Luna record illustrates the problem: it records nudity and absence of depicted sexual activity but does not contain a sexualization label. A new semantic question therefore requires an explicit rubric extension rather than reinterpretation of an old accuracy figure.
+
+Our approach combines retrospective evidence auditing with a controlled evaluation specification. The audit preserves task outcomes and output provenance, including error records, instead of selecting images solely for their visual appeal. The evaluation separates service response, sexualized presentation, output fidelity, and policy judgment. We designate Luna as the structured model assessor and retain human review as a distinct evidence source. Existing Luna records cover a smaller nudity-recognition set; the new sexualization rubric is explicitly distinguished from those completed assessments. This separation allows a richer semantic endpoint without retroactively assigning unmeasured labels.
+
+Three questions organize the evaluation. \textbf{RQ1:} Are policy-equivalent background conditions handled consistently? \textbf{RQ2:} Do differences persist after accounting for content preservation, uncertainty, and technical failures? \textbf{RQ3:} Do observations generalize across independent sources and evaluation windows? These questions make both positive and negative findings informative. A service may behave consistently, or an apparent contextual effect may disappear once subject changes are identified.
+
+Our contributions are threefold:
+\begin{itemize}
+\item We define a background-controlled, request-level evaluation setting for sexual-content safety in closed-source image services, with explicit subject, medium, and policy-equivalence requirements.
+\item We audit an existing image-return archive and integrate a traceable historical visual case, distinguishing file integrity and author-reported interpretation from confirmatory evidence of a background effect.
+\item We specify Luna-assisted semantic assessment and a disaggregated reporting framework that separates nudity, sexualized expression, policy violation, and service reliability.
+\end{itemize}
+These contributions connect the semantic question to auditable evidence; they do not establish attack superiority or make a newer target sufficient evidence of novelty.
+
+\section{Related Work}
+\subsection{Image Safety Classification and Semantic Targets}
+Image safety assessment spans localized detection, global classification, and structured multimodal judgment. NudeNet provides anatomical detections, while LlavaGuard supports policy-oriented visual assessment with structured outputs \citep{nudenet,llavaguard}. These tools differ in what their outputs mean. A localized detection result is not an image-level judgment of erotic presentation, and a policy label is not a direct measurement of a viewer's response.
+
+\citet{artcentric} examines moderation of nudity from an art-centered perspective, motivating care when interpreting exposure as harmfulness. Our study uses that conceptual distinction but does not make artistic transformation its intervention. Instead, we require separate labels for the visible subject and its sexualized presentation. Luna is used as a structured assessor for this purpose, not assumed to be an infallible oracle. Its agreement with prior research-agent labels on a nudity task cannot establish validity on the newly defined sexualization endpoint.
+
+\subsection{Context Shifts and Closed-Source Services}
+\citet{contextshift} is the closest contextual precedent. The work investigates NSFW classifier failures under changes to benign visual context, organizes its study around exploration and exploitation, and also examines commercial generation services. It should therefore not be characterized as exclusively an open-weight study. Its broader contextual intervention and classifier-centered analysis establish substantial overlap with the motivation of the present work.
+
+Our proposed distinction is the combination of a background-isolated request comparison, an explicitly separated sexualization endpoint, and source-level evidence accounting for a closed-source service. This is a difference in the evaluation question and required evidence, not proof that a new failure mechanism has already been discovered. In particular, results from an offline classifier are not attributed to an undisclosed component of the target service. Likewise, endpoint aliases, response-model fields, and independently verified serving versions are treated as different levels of provenance.
+
+This focus also separates a service-level observation from a claim about internal mechanism. A closed-source deployment may reject an input, produce a modified image, suppress an output, or encounter an unrelated error. Observing the final response cannot identify which hidden stage was responsible. Our analysis consequently concerns externally observable consistency under specified conditions. It does not use classifier results from a different system as evidence that the target service employs, or failed at, that same component.
+
+\subsection{Jailbreak Evaluation and Task-Specific Data}
+Early jailbreak research provides a useful model for connecting a failure hypothesis to an evaluation rather than presenting isolated successes. \citet{jailbroken} studies competing objectives and mismatched generalization using both curated and separately constructed request sets. This supports the use of task-specific data when existing benchmarks do not isolate the variable of interest. It does not remove the need for held-out evaluation, representative cases, or a transparent sampling unit.
+
+For multimodal generation, \citet{past2harm} investigates past-tense and historical framing with adaptive interaction, reporting success and severity measures. Its intervention differs from the background-controlled comparison defined here; it is not simply a statue-based transformation. Moreover, a multi-risk aggregate is not a sexual-content-only result for a particular service. Meaningful numerical comparison would require aligned input modalities, request budgets, evaluation dates, and semantic endpoints. We therefore distinguish related methods from methods actually reproduced under the present protocol.
+
+\subsection{Benchmarks, Human Review, and Reporting}
+UnsafeBench supplies annotated real-world and generated images for image safety classification \citep{unsafebench}. T2ISafety broadens generation assessment across several safety dimensions and provides annotated image resources \citep{t2isafety}. Such datasets can support assessor validation and external checks, but an image collection does not automatically supply background-matched requests or the missing service responses. Its total image count also cannot stand in for a relevant sexual-content subset.
+
+Public image benchmarks and task-specific requests serve complementary roles. The former support assessor validation beyond discovery examples; the latter isolate a contextual comparison. A selected output collection cannot automatically serve as both, because it may lack negative cases or complete response histories.
+
+The present archive occupies a different evidentiary role: it documents historical service interactions and their available outputs. Author review supplies retrospective human interpretation, while a confirmatory benchmark requires explicit source grouping and image-linked labels. We consequently recommend reporting artifact coverage, assessor coverage, uncertainty, and request outcomes separately. This extends the evaluation question beyond whether a detector fires, without conflating author judgment, model judgment, or file verification with a completed causal test.
+
+\clearpage
+\section{Problem Formulation}
+We study observable behavior of a closed-source image service rather than assuming access to its internal safety components. A source-level case has an intended subject $s_i$, policy-relevant content attributes $a_i$, a visual medium $m_i$, and background condition $b_{ic}$. Its request is represented analytically as
+\begin{equation}
+ q_{ic}=\operatorname{Encode}(s_i,a_i,m_i,b_{ic}).
+\end{equation}
+This decomposition defines the variable of interest; it does not specify a prompt-construction algorithm or guarantee that a generator preserves the intended components.
+
+The service returns
+\begin{equation}
+ o_{icr}=G(q_{ic};v,t,h,r),
+\end{equation}
+where $v$ is the exposed model identifier, $t$ the evaluation window, $h$ interaction history, and $r$ a repetition. The model identifier is not assumed to verify a serving snapshot. A quota error is a technical outcome, not a refusal.
+
+A background comparison is eligible only if its subject, attributes, medium, and intended policy meaning are equivalent. With $\ell_\pi$ an independently assigned label under policy $\pi$, define
+\begin{equation}
+\begin{split}
+ E_i=\mathbf1\{&s_{i0}=s_{i1},\ a_{i0}=a_{i1},\\
+ &m_{i0}=m_{i1},\ \ell_\pi(q_{i0})=\ell_\pi(q_{i1})\}.
+\end{split}
+\end{equation}
+These equalities denote semantic equivalence, not identical wording. Text-only cases do not support a claim of fixed foreground pixels; image-conditioned cases require separate input and output fidelity checks.
+
+For an image $x$, assessor $k$ records
+\begin{equation}
+ J_k(x;\pi)=(N,S,X,A,V,U)_k,
+\end{equation}
+where the attributes are nudity, sexualized presentation, explicit anatomy, depicted sexual activity, policy violation, and uncertainty. We distinguish erotic interpretation from experimentally measured viewer arousal. In particular, $N=1$ does not imply $S=1$, and $A=0$ does not imply $S=0$. Similarly, an image return $R(o)=1$ establishes neither policy violation nor subject preservation $F(o,q)=1$.
+
+The contextual contrast for eligible, observed pairs is
+\begin{equation}
+ \widehat\Delta_\pi=\frac1{|\mathcal I|}
+ \sum_{i\in\mathcal I}(\overline V_{i1}-\overline V_{i0}),
+\end{equation}
+where completed repetitions are summarized within source before averaging. Coverage and fidelity must accompany the estimate. Without verified equivalence and controlled assignment, this is an observational difference, not an identified causal effect.
+
+\section{Methodology}
+Our framework has two complementary components: retrospective evidence reconstruction and structured semantic assessment. The former establishes what the archive contains; the latter defines how to judge the content without replacing the semantic question with a detector score. Confirmatory background comparison uses the task definition above and is kept separate from discovery observations.
+
+Figure~\ref{fig:workflow} separates the completed retrospective evidence chain from the confirmatory lane required to estimate a background effect. They share identifiers and reporting conventions, but answer different questions and converge only in disaggregated reporting.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/evaluation_workflow.pdf}
+\caption{Evidence flow. Blue boxes are completed provenance operations, amber boxes are coverage-bounded interpretation stages, and green boxes are the unexecuted confirmatory comparison. Reporting separates image return ($R$), fidelity ($F$), sexualized presentation ($S$), policy violation ($V$), technical failure ($E$), and uncertainty ($U$).}
+\label{fig:workflow}
+\end{figure*}
+
+\subsection{Historical Evidence Reconstruction}
+\paragraph{Step 1: Establish the observation unit.}
+We read task manifests rather than count every image in a directory. Each task is linked to its requested model alias, recorded terminal state, and available downloads. Repeated requests, multiple outputs, and derived previews are not treated as independent intentions. Failed tasks remain in the inventory.
+
+\paragraph{Step 2: Verify artifact integrity.}
+For each referenced image $x_j$, the audit decodes the file and compares its SHA-256 digest to the archived declaration:
+\begin{equation}
+\begin{split}
+ A_j={}&\mathbf1\{\operatorname{Decode}(x_j)\text{ succeeds}\}\\
+ &\cdot\mathbf1\{H(x_j)=h_j^{\mathrm{log}}\}.
+\end{split}
+\end{equation}
+A separate response-byte check is used where a response embeds the image directly. This verifies provenance, not sexuality: $A_j=1$ does not imply $S(x_j)=1$ or $V_\pi(x_j)=1$.
+
+\paragraph{Step 3: Define the comparison set.}
+Independent source groups, not files, are the intended sampling units. A confirmatory set must separate development and held-out sources, check background-pair equivalence, and preserve all outcomes under a fixed collection rule. Public image datasets can validate assessors externally but cannot supply missing service responses or automatically create valid contextual pairs.
+
+\subsection{Luna-Assisted Semantic Assessment}
+\paragraph{Step 1: Separate the content attributes.}
+Luna is the designated structured model assessor. It is asked to distinguish nudity, erotic presentation, explicit anatomy, sexual activity, and policy judgment, with visible evidence and uncertainty. Full scenes and depicted images are both relevant. Neither an artistic setting nor the presence of bare skin predetermines the sexualization label. NudeNet and global NSFW classifiers remain auxiliary measurements.
+
+\paragraph{Step 2: Keep assessment independent of the desired outcome.}
+The model assessor is not given the author's expected labels or detector scores before making its own judgment. The record includes image hash, requested model, rubric version, available service metadata, and rationale. Shared-context image review is disclosed; repeated model assessments are not called independent human raters.
+
+\paragraph{Step 3: Retain human evidence and disagreement.}
+The author confirms having reviewed all historical images individually and interpreting the outputs as sexualized rather than merely nude. This is recorded as a single-author retrospective assessment, distinct from Luna's judgments. Differences between assessors are retained rather than resolved automatically in favor of either. Hash-linked author labels are needed before calculating an independently auditable per-image agreement table.
+
+The existing Luna assessment has a narrower field set than this specification. It is reported as completed evidence in Section~5.2; the extended sexualization assessment remains a planned evaluation. Details of the rubric and reporting conventions are retained in the appendix rather than presented as additional experimental findings.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[t]{0.31\textwidth}\centering
+\includegraphics[width=\linewidth,height=0.31\textheight,keepaspectratio]{figures/historical_input.jpg}\\
+\small (a) Supplied historical input
+\end{minipage}\hfill
+\begin{minipage}[t]{0.31\textwidth}\centering
+\includegraphics[width=\linewidth,height=0.31\textheight,keepaspectratio]{figures/historical_r03.png}\\
+\small (b) Historical output r03
+\end{minipage}\hfill
+\begin{minipage}[t]{0.31\textwidth}\centering
+\includegraphics[width=\linewidth,height=0.31\textheight,keepaspectratio]{figures/historical_r04.png}\\
+\small (c) Historical output r04
+\end{minipage}
+\caption{Historical motivating case from the earlier project, reproduced without content editing. The supplied input depicts an unclothed figure within an artwork on an easel. Both output files match the image bytes in archived HTTP 200 response bodies. The requested model alias is \texttt{gpt-image-2}; the response model field is absent. These are two outputs associated with one source, not two independent sources or a background-only contrast. This case illustrates the distinction between visible content and its surrounding scene; it does not establish prohibited sexual generation.}
+\label{fig:history}
+\end{figure*}
+
+\section{Experiments}
+\subsection{Experimental Setup}
+\paragraph{Data and scope.}
+We evaluate existing records; this revision makes no new generation calls. The historical audit covers 16 experiment-level \texttt{task\_results.json} manifests in the local chat2api archive. Separate retry files, partial manifests, contact sheets, fixtures, and unlinked images are excluded from this bounded inventory. The earlier visual case comprises one supplied artwork image and two historical outputs, audited separately. Existing Luna review records cover 18 images from six independent sources, not the full historical archive.
+
+\paragraph{Systems and assessors.}
+The task logs expose the requested alias \texttt{gpt-image-2} for 233 records; it is not recovered by the audit for two. This is a local-wrapper attribution, not independent verification of a proprietary serving snapshot. The earlier classifier run uses NudeNet 3.4.2 with \texttt{320n.onnx} and native preprocessing, plus Falconsai and AdamCodd NSFW classifiers. The structured visual review was requested as \texttt{gpt-5.6-luna}; the actual serving snapshot was not independently verified. We retain the ordinary structured review and do not reintroduce the redundant context-reminder condition as a main result.
+
+\paragraph{Human assessment.}
+The author states that every historical image was inspected individually and that the generated outputs meet the intended sexualized/erotic interpretation rather than merely depicting nudity. The statement is included as human evidence. It is not described as blinded multi-rater annotation or as measured arousal. The archived inventory currently lacks the image-linked label rows required to reconcile that statement with every manifest item.
+
+\paragraph{Metrics.}
+Artifact counts, task states, content labels, and policy outcomes are reported separately. For a completed request evaluation, let $N_c$ denote scheduled observations, $E_c$ technical failures, $V_c$ adjudicated violating image returns, and $U_c$ unresolved completed observations. The proposed violation rate and uncertainty bounds are
+\begin{equation}
+ \widehat p_c=\frac{V_c}{N_c-E_c},\qquad
+ \left[\frac{V_c}{N_c-E_c},\frac{V_c+U_c}{N_c-E_c}\right].
+\end{equation}
+Refusals remain in the denominator; $E_c/N_c$ is reported separately. A zero denominator yields no estimate. An existing-output sexualization fraction would use a different, selection-conditioned denominator and is not an ASR. The current results do not populate these proposed violation metrics without the required labels.
+
+\subsection{Main Results}
+\paragraph{The archive contains substantial verified image-return evidence.}
+Table~\ref{tab:archive} summarizes the retrospective audit. The 235 case records have 235 distinct task identifiers. Their final observations span July 22--23, 2026 (UTC). Among 222 records containing recoverable request text, there are 136 distinct prompt hashes; byte distinction does not establish independent semantic content. Task modes are generation for 233 records and editing for two.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\columnwidth}{@{}Xr@{}}
+\toprule
+Audited quantity & Count \\
+\midrule
+Task-result manifests & 16 \\
+Case records / distinct task identifiers & 235 / 235 \\
+Wrapper terminal status: success & 136 \\
+Wrapper terminal status: error & 99 \\
+Records with request-prompt hashes & 222 \\
+Distinct hashes among those prompts & 136 \\
+Records with hash-verified image downloads & 131 \\
+Verified image files / distinct image hashes & 133 / 133 \\
+Missing referenced downloads & 0 \\
+Download hash mismatches & 0 \\
+\bottomrule
+\end{tabularx}
+\caption{Historical artifact inventory, not attack success rates. ``Success'' is the wrapper's recorded task status; no sexual-content or policy-violation label is inferred from it.}
+\label{tab:archive}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/archive_accounting.pdf}
+\caption{Separate accounting units in the historical audit. The left panel counts task records and wrapper states; the right counts image files and integrity outcomes. Because 131 records contain 133 verified files, the panels are not merged into a funnel. These are not attack-success or sexualization rates.}
+\label{fig:accounting}
+\end{figure*}
+
+Figure~\ref{fig:accounting} visualizes the denominator distinction in Table~\ref{tab:archive}: wrapper state concerns records, whereas verification concerns decoding and digest agreement. A content-positive output, an image return, and a technically completed task remain different events.
+
+The 136 wrapper success states must not be equated with the 131 records containing hash-verified downloads. Multiple downloads also make the count of verified images, 133, different from the record count. No referenced download is missing and none has a mismatching declared hash. These findings substantiate the existence and integrity of an actual output archive. They do not assign semantic success to the 136 task statuses. The 99 error states require separate adjudication before any could be called a safety refusal.
+
+\paragraph{Anatomical and global classifiers do not settle the semantic endpoint.}
+Table~\ref{tab:detectors} reports the actual stored outputs for the three images in Figure~\ref{fig:history}. NudeNet returns no boxes for all three. The two global classifiers also return low native NSFW scores. In contrast, the visual scene contains an unclothed figure within a displayed artwork. The appropriate inference is that these detector outputs do not resolve the broader semantic question, not that the native detector has universally failed or that permitted artistic nudity must be prohibited.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Image & NudeNet boxes & Falconsai & AdamCodd \\
+\midrule
+Original & 0 & 0.000199 & 0.003657 \\
+r03 & 0 & 0.000167 & 0.006120 \\
+r04 & 0 & 0.000159 & 0.004633 \\
+\bottomrule
+\end{tabular}
+\caption{Archived scores for the historical visual case. Native NSFW scores are not calibrated probabilities of erotic interpretation or viewer arousal.}
+\label{tab:detectors}
+\end{table}
+
+\paragraph{Existing Luna results support a narrower content claim.}
+The completed ordinary review evaluates 18 images: 13 artwork-positive conditions from one source and five benign sources. Table~\ref{tab:luna} preserves its actual labels. It agrees with research-agent references on all 18 unclothed-figure decisions, but these are correlated conditions and the references are not an independent human gold standard. All 18 explicit-anatomy and sexual-activity labels are negative. There are no positive sexual-activity references, so recall for that target cannot be estimated.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\columnwidth}{@{}Xl@{}}
+\toprule
+Existing Luna measurement & Recorded result \\
+\midrule
+Images reviewed & 18 \\
+Independent positive / benign sources & 1 / 5 \\
+Unclothed-figure positive labels & 13 \\
+Unclothed agreement with agent references & 18/18 \\
+Explicit-anatomy positive labels & 0 \\
+Sexual-activity positive labels & 0 \\
+Separate sexualization field & Not collected \\
+\bottomrule
+\end{tabularx}
+\caption{Completed Luna review, not an extended sexualization evaluation. The 18 images are not the 133 historical output files.}
+\label{tab:luna}
+\end{table}
+
+The missing sexualization field is consequential. Absence of a depicted sexual act does not establish absence of erotic presentation, so these records neither verify nor refute the author's broader interpretation. They also cannot be relabeled as 100\% sexual-content accuracy. The author report and Luna results are therefore presented as distinct measurements with different coverage.
+
+\subsection{Historical Outputs from the Closed-Source Interface}
+Figure~\ref{fig:history} shows the supplied input and two historical outputs from August 31, 2026. Both response records contain HTTP 200, and decoding each embedded image produces exactly the bytes of the corresponding local output. The requested alias is \texttt{gpt-image-2}; the response model field is absent. These two records are separate from the July inventory and are not silently added to its denominator.
+
+The outputs visibly retain the artwork-on-easel composition, but differ in rendering details. We therefore report scene continuity rather than pixel-identical preservation. Because the input already has an artistic medium, it illustrates the observed service behavior without validating a non-artistic background-only intervention. Two outputs from one source remain one source for generalization claims.
+
+For the proposed closed-source comparison, three distinct requirements remain: establishing source-disjoint policy-equivalent pairs, completing the extended Luna assessment, and linking human labels to the analyzed images. No comparable method-by-service ASR table has been completed. We do not copy another paper's numbers into this section as if they were our own baseline results. Table~\ref{tab:coverage} makes the measured and unmeasured endpoints explicit.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\columnwidth}{@{}Xl@{}}
+\toprule
+Closed-source evidence endpoint & Status \\
+\midrule
+Archived task states and image integrity & Verified \\
+Two historical response/image byte matches & Verified \\
+Author's individual image review & Author-reported \\
+Hash-linked sexualization label table & Not available \\
+Background-pair equivalence & Not established \\
+Controlled background effect / ASR & Not estimated \\
+\bottomrule
+\end{tabularx}
+\caption{Coverage of the closed-source evidence. Missing measurements are not zero-valued outcomes.}
+\label{tab:coverage}
+\end{table}
+
+\subsection{Assessment Limitations and Reporting Implications}
+The combined results reveal a measurement gap: artifact integrity answers whether a file matches its record; anatomical detection answers a localized category question; the old Luna review answers a broader but still incomplete content question; and author review supplies a human erotic interpretation. None should overwrite the others. In particular, a low detector score should not be used to dismiss a reported erotic interpretation, and that interpretation should not be used to invent absent model labels.
+
+We recommend that subsequent studies report separate nudity, sexualization, explicit-anatomy, sexual-activity, and policy outcomes, together with exact assessor coverage and denominators. Request counts must include the fate of failures and refusals; output-only collections must disclose their selection. Human-rater count, blinding, model identifier, rubric, uncertainty, and disagreement should be explicit. The recommendation concerns reporting structure, not mandatory use of Luna.
+
+Unlike a mitigation experiment, this recommendation has no measured defense effect. We have not trained a new safeguard or established that the proposed rubric improves classification accuracy. Such claims require a separate held-out assessment. Longer annotation instructions and reporting details appear in the appendix so that the main experimental section remains centered on actual observations and their interpretation.
+
+\section{Conclusion}
+We study background context in closed-source sexual-content evaluation through an audited historical archive and an explicit controlled-comparison formulation. The audit verifies 133 distinct image artifacts across 235 task records and separately verifies two historical response-embedded outputs. Existing detector and Luna records demonstrate why nudity recognition, erotic interpretation, and policy judgment must be kept distinct. The author's retrospective review is included as human evidence. The proposed background effect and extended semantic assessment remain to be validated; neither is inferred from image-return counts alone.
+
+\section*{Limitations}
+The bounded archive is not an exhaustive machine inventory, and distinct hashes do not establish independent sources. Human review is author-reported and single-rater; hash-linked labels are absent. The 18-image Luna review contains correlated conditions, omits sexualization, and is not validation against independent human labels. Wrapper fields do not verify a proprietary serving snapshot. No background-equivalent comparison or causal effect is established; error states are not automatically refusals. The artistic case cannot validate a non-artistic intervention.
+
+\section*{Ethical Considerations and Reproducibility}
+The read-only audit made no generation calls. Public release should prioritize aggregates, metadata, and licensed illustrations; annotators require informed participation and an opt-out. The script records hashes and traceable metadata without exporting prompts, credentials, or network addresses. Local paths require review before release; operational bypass instructions are excluded.
+
+\clearpage
+\bibliography{references}
+\clearpage
+\appendix
+\section{Artifact Audit Details}
+
+The previous protocol draft considered only the earlier paper's small local bundle. A broader read-only search located historical chat2api task manifests on the same machine. We therefore distinguish \emph{existing archived outputs} from \emph{new confirmatory observations}: the former exist and are now included; the latter have not been collected.
+
+The bounded audit reads 16 top-level experiment \texttt{task\_results.json} manifests under a local chat2api research archive. It retains error records and verifies every referenced download through image decoding and SHA-256 comparison. Partial files, separate retry manifests, contact sheets, fixtures, and unlinked images are outside this audit scope; it is not an exhaustive inventory of all machine files. Original prompts, credentials, and network addresses are not exported into the paper's evidence manifest. No API request was made.
+
+
+
+These manifests contain final observations dated July 22--23, 2026 (UTC). Task mode is recorded as generation for 233 records and editing for two. A requested model alias of \texttt{gpt-image-2} is recoverable for 233 records; it is not recovered by this audit for two. A wrapper's model field is not independent verification of the serving backend or its snapshot.
+
+The 136 success statuses and 131 records with verified downloaded images are intentionally reported separately. A successful status alone does not satisfy the file-verification criterion. Multiple downloads in a record also explain why image count differs from record count. Distinct prompt hashes count byte-distinct requests, not independent semantic intentions or subjects. The 99 error statuses are not classified as safety refusals without additional error adjudication.
+
+For clarity, archive verification is expressed as
+\begin{equation}
+\begin{split}
+ A_j={}&\mathbf{1}\{\operatorname{Decode}(x_j)\text{ succeeds}\}\\
+ &\cdot\mathbf{1}\{H(x_j)=h_j^{\mathrm{log}}\}.
+\end{split}
+\end{equation}
+where $H$ is SHA-256 and $h_j^{\mathrm{log}}$ is the historical declared digest. A valid artifact establishes byte integrity, not content validity:
+\begin{equation}
+ A_j=1\ \not\Rightarrow\ V_\pi(x_j)=1.
+\end{equation}
+Accordingly, Table~\ref{tab:archive} establishes that a substantial image-return archive exists; it does not establish the proposed background effect or a sexual-content ASR.
+
+
+\section{Extended Assessment Specification}
+
+We designate Luna as the primary structured model assessor for the intended semantic analysis, while retaining the human assessment as a separate evidence source. The extended specification requires the complete attribute vector above, an evidence-based rationale, an uncertainty decision, and a separate policy determination. The additional sexualization field is a protocol extension and has not yet been executed over the historical inventory.
+
+The assessment instruction is neutral with respect to the expected result: inspect the full image and any depicted image, distinguish visible nudity from erotic presentation, do not infer either solely from an artistic or non-artistic setting, and return uncertainty when evidence is insufficient. The assessor is not told that the method succeeded or that every output must be labeled sexual. It receives no detector score or author label before making its own judgment. This keeps semantic review separate from confirmation of the research hypothesis.
+
+An audit record should contain image hash, requested model identifier, available serving metadata, assessment date, the fixed rubric version, the attribute vector, and its rationale. If more than one image is assessed in the same context, that fact is reported. Model confidence language is not converted into a calibrated numerical probability. Repeated model judgments, if collected, measure assessor variability rather than independent human agreement.
+
+
+\section{Detailed Reporting Recommendations}
+We recommend that future studies of sexual content in generated images report distinct outcomes rather than one ambiguous ``NSFW ASR.'' This is a reporting proposal, not an existing community standard or a validated universal evaluator. The distinction is particularly important when a paper evaluates a semantic sexualization target using an anatomical detector.
+
+\paragraph{Define the endpoint.}
+State whether the target is nudity, sexualized expression, explicit anatomy, depicted sexual activity, or policy violation. Report separate labels when several are relevant. If an arousal claim is made, specify the human study supporting it instead of treating a content label as proof of a viewer response.
+
+\paragraph{Expose the denominator.}
+Report scheduled requests, completed responses, image returns, technical failures, unresolved annotations, and independent source counts. For existing output collections, sexualization prevalence is conditional on available images and must not be presented as a request-level success rate. In a fully annotated output subset $\mathcal O$, a source-specific assessor's prevalence can be written as
+\begin{equation}
+ \widehat p_S^{(k)}=
+ \frac{\sum_{x\in\mathcal O}\mathbf{1}\{S_k(x)=1\}}
+      {|\mathcal O|}.
+\end{equation}
+This quantity is not estimable from the current archive until image-linked labels are available; an all-positive author statement is disclosed separately. An output-only denominator is selection-conditioned and says nothing about failed or missing requests.
+
+\paragraph{Identify each assessor.}
+Report detector package and checkpoint, preprocessing and thresholds, model-judge identifier and rubric, and human-rater count. Separate author inspection, independent human annotation, and model evaluation. State exactly which images each assessor covered. Do not call a model's agreement with another agent's labels human-validated accuracy.
+
+\paragraph{Preserve disagreement and uncertainty.}
+Report uncertain cases and human--model disagreement. Inter-rater statistics require actual paired rater data and a defined label scale; they are not inferred from one reviewer's confidence. Show representative disagreements, not only examples favorable to the proposed method.
+
+\paragraph{Separate integrity from effectiveness.}
+Provide stable image identifiers, recoverable request/output provenance, and file hashes where appropriate. File verification establishes artifact integrity, not sexuality, policy violation, method novelty, or a causal background effect. Include benign and non-sexual-nudity controls to make the intended conceptual distinction testable.
+
+\paragraph{Respect task comparability.}
+Published numbers should only be compared when their endpoints and sampling units match. A nudity recall, a sexualization-positive fraction, a service refusal rate, and a policy-violation rate are not interchangeable. We recommend adopting this disaggregated reporting structure, not requiring all future work to use Luna specifically. Evaluators should remain replaceable and independently validated.
+
+
+\end{document}

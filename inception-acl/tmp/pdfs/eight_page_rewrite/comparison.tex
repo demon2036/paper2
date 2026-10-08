@@ -1,0 +1,32 @@
+\begin{table*}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\textwidth}{@{}p{0.205\textwidth}p{0.125\textwidth}p{0.18\textwidth}p{0.105\textwidth}p{0.065\textwidth}X@{}}
+\toprule
+Published example & Output model & Material & Exposure & Pose & Specified-pose evaluation \\
+\midrule
+Low-Effort, material substitution \citep{aestheticcamouflage}, Fig.~6 &
+Not assigned per image & $\axm_1$: sculpture & Masked & $\axp_1$ & Not separately evaluated \\
+MODX \citep{modx}, Fig.~6(a) & DALL\,$\cdot$\,E~3; SD~3 &
+$\axm_4$: photographic & Blurred & $\axp_1$ & Not separately evaluated \\
+PAST2HARM \citep{past2harm}, Table~10, first image & Gemini Nano Banana Pro &
+$\axm_4$: photographic & $\axe_6$ & $\axp_1$ & Not separately evaluated \\
+RISE \citep{rise}, Fig.~1, low-moderation column & GPT-Image-2 &
+$\axm_1$: study plate; $\axm_3$: painting & Masked & $\axp_1$ & Not separately evaluated \\
+\midrule
+\rowcolor{axisMbg}
+\textbf{Ours}, Figure~\ref{fig:methodcontrol} & GPT-Image-2 &
+\textbf{$\axm_3$: modern drawn human} & \textbf{$\axe_6$} & \textbf{$\axp_2$} &
+\textbf{Three configurations with joint target checks} \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Visual attributes and pose evaluation in published examples.}
+We apply the definitions in Table~\ref{tab:axes} to the identified examples;
+the grades describe those images, not a method's capability limit. Masking
+and blur prevent exposure grading of the affected originals. The final
+column concerns evaluation of a specified configuration beyond the pose category.
+The PAST2HARM example is from Gemini; the RISE examples are from GPT-Image-2.}
+\label{tab:priorprofiles}
+\end{table*}
+

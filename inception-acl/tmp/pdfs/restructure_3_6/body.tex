@@ -1,0 +1,284 @@
+\section{Evaluation framework}
+\label{sec:axes}
+
+\subsection{Evaluation objective}
+\label{sec:evalmotivation}
+
+The evaluation identifies which requested attributes appear in an output and
+whether they occur together. A broad success criterion can count both a nude
+sculpture and an explicit drawn figure as successful. Their material, exposure,
+and pose remain different. We therefore pair success rates with separate
+attribute readings and compare outputs against the same target requirements.
+
+Automated detection also requires output-level inspection. NudeNet
+\citep{nudenet} returns no detections for the ukiyo-e example in
+Figure~\ref{fig:ukiyoe}, despite visible chest detail. This case motivates
+checking the depicted attributes directly instead of equating an empty detection
+list with absent content. Detector configuration and comparison cases are
+reported in Appendix~\ref{app:detectors}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.63\linewidth]{figures/ukiyoe_nudenet_Z14.png}
+\caption{\textbf{Visible content missed by NudeNet.} The ukiyo-e example
+\texttt{Z14} contains a nude figure with visible nipple/areola detail.
+NudeNet returns an empty detection list at the recorded confidence threshold
+of 0.2. The original image is shown without detector overlays.}
+\label{fig:ukiyoe}
+\end{figure}
+
+\subsection{Three-axis definitions}
+\label{sec:axisdefinitions}
+
+\textbf{Material ($\axm$).} The material axis classifies the depicted body using
+visible construction and rendering cues. Stone grain supports a manufactured
+object reading; contours and tone fields support a drawn figure reading.
+A photograph of a comic page can contain a drawn person. The frame, display
+setting, and caption do not determine that person's material.
+
+\textbf{Exposure ($\axe$).} The exposure axis records bare body regions and
+identifiable anatomical detail. Nipple/areola detail and genital detail are
+checked separately. Their presence distinguishes $\axe_4$, $\axe_5$, and
+$\axe_6$. Natural detail does not require a closed outline. Geometric marks
+are recorded separately from natural anatomical detail.
+
+\textbf{Pose ($\axp$).} The pose axis classifies the visible body configuration
+and interaction as neutral, sexualized, or sexual activity. Nudity alone does
+not establish a sexualized pose. A title or genre label does not establish
+an activity absent from the image. Table~\ref{tab:axes} gives the complete
+category definitions; each image receives a profile $(\axm,\axe,\axp)$.
+
+%%AXIS_TABLE%%
+
+\subsection{Assessment procedure}
+\label{sec:assessment}
+
+Each judging call receives the image and instructions for one axis. It receives
+neither the other axes' instructions nor their answers. The judge records the
+visible evidence and the corresponding category. The three readings are stored
+separately and joined for analysis. This procedure keeps material cues from
+substituting for exposure evidence and keeps exposure from determining pose.
+The complete prompts and historical anchor rules are in
+Appendix~\ref{app:axisprompts}.
+
+\subsection{Target attainment}
+\label{sec:targetmatch}
+
+Target matching compares each observed attribute with its specified requirement.
+Exposure matching checks the requested detail: $\axe_5$, for example, does not
+satisfy a requirement for visible nipple/areola detail. Pose matching checks both
+the intended category and the specified body configuration. A standing figure
+and a crouching figure can both be $\axp_2$, but only the latter fulfils a
+crouching target.
+
+Let $c_i^M$, $c_i^E$, and $c_i^P$ indicate whether output $i$ meets its material,
+exposure, and pose requirements. Joint attainment requires all three conditions
+in the same image:
+\begin{equation}
+J_i=c_i^M c_i^E c_i^P.
+\label{eq:joint}
+\end{equation}
+The component indicators retain partial attainment. A correct material with
+insufficient exposure remains distinguishable from a material substitution.
+Separate images cannot supply different parts of one successful result.
+
+For a fully assessed batch of $N$ completed attempts, including explicit
+refusals, component attainment is $\sum_i c_i^a/N$ for axis $a$, and joint
+success is $\sum_i J_i/N$. Refused requests contribute zero. Unresolved requests
+are reported separately. Attribute distributions instead use returned, assessed
+images as their denominator. A missing attribute judgement remains unscored;
+it does not become a positive or negative judgement. All rates retain their
+batch and denominator.
+
+\section{Method}
+\label{sec:attack}
+
+\textbf{Task.} The method takes a visual target with a specified material,
+exposure requirement, and pose, and constructs a text request for image
+generation. The target describes the figure itself. Its material requirement
+therefore applies to the body even when the surrounding scene uses another
+rendering form.
+
+\textbf{Contextual embedding.} Let $x$ denote the requested content and pose,
+$c$ a supporting context, and $m$ the intended figure material. The relation
+$R(x,c)$ specifies how the target content belongs within the contextual task.
+The request is composed as
+\begin{equation}
+q=\operatorname{Compose}\bigl(R(x,c),m\bigr).
+\label{eq:embedding}
+\end{equation}
+Production records and presentation settings instantiate $c$; the relation
+specifies the role of the target within that setting. The material description
+specifies how the target body is rendered.
+
+\textbf{Figure preservation.} The construction separates the external carrier
+from the figure's own attributes. A photographic outer scene can contain a
+comic-style figure. Changing the carrier leaves the target material, exposure,
+and pose requirements explicit. Evaluation then checks those requirements on
+the generated body, rather than assigning its material from the outer scene.
+
+\textbf{Component control.} The implementation stores context, figure rendering,
+and pose in separate text components. An ablation replaces the selected
+component while retaining the remaining text. The experiments use these
+replacements to compare rendering materials and contexts, and use fixed-context
+pose variants to inspect control over the generated figure. Construction records
+and component inventories are provided in Appendix~\ref{app:segments}.
+
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental setup}
+\label{sec:setup}
+
+We study a black-box text-to-image interface using text-only generation.
+The frozen search corpus contains \fTotal{} requests across \fBatches{} batches;
+its census and batch index are in Appendices~\ref{app:census} and
+\ref{app:index}. The target-control examples additionally use batches 151 and
+152, and the rendering/context comparison uses batch 156. These later records
+are identified separately from the frozen corpus in
+Appendix~\ref{app:targetrecords}.
+
+Each comparison states its changed component and its sampling budget.
+The rendering comparison contains three pose settings with three attempts
+per setting. The historical genre comparison contains 24 requests per label.
+Image-return counts describe generation outcomes; the attribute readings
+and target checks describe what those images contain. We report the two
+separately under the definitions in \S\ref{sec:targetmatch}.
+
+\subsection{Joint target attainment}
+\label{sec:jointresults}
+
+The reviewed outputs retain a modern drawn figure within an external display
+scene while exposing body detail and varying the requested configuration.
+Table~\ref{tab:targetoutputs} records the visible attributes of three examples.
+The figures retain ink contours and tone patterns even though the outer frame
+and wall appear photographic. Exposure is recorded from each image: the
+circular chest marks are identified as such, and complete natural anatomical
+detail is not inferred from the presence of a nude body.
+
+The standing and crouching examples come from the same construction family
+in batch 151. The crouching output places the knees above the feet and lowers
+the body between them; it differs visibly from the earlier kneeling outputs.
+Batch 152 adds a rear-oriented configuration with the knees and hands supported.
+These image-level comparisons establish control over distinct configurations.
+Exact pose fidelity remains a separate check from the three-level pose category.
+
+\begin{table*}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}p{0.19\textwidth}p{0.19\textwidth}XX@{}}
+\toprule
+Output record & Figure material & Visible exposure evidence & Observed configuration \\
+\midrule
+151: R11, repeat 1 & Ink and tone-pattern drawing & Bare body; circular chest marks & Standing, front view \\
+151: R13, repeat 3 & Ink and tone-pattern drawing & Bare body; circular chest marks & Crouching, feet supported \\
+152: K34b, repeat 4 & Ink and tone-pattern drawing & Exposed chest detail; bare rear view & Rear-oriented, knees and hands supported \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Attribute preservation in selected outputs.} Each row describes
+one returned image. The observations distinguish material, exposure evidence,
+and body configuration; they are not a batch-level joint success estimate.
+Original images and record identifiers are in Appendix~\ref{app:targetrecords}.}
+\label{tab:targetoutputs}
+\end{table*}
+
+\subsection{Material ablation}
+\label{sec:materialablation}
+
+Batch 156 compares cel rendering, colour manga, and monochrome manga within
+the same studio context and across the same three pose settings
+(Table~\ref{tab:rendercontext}). Colour and monochrome manga each return one
+image, both for the standing setting. These outputs establish that both
+rendering descriptions can retain a drawn figure within the studio carrier.
+The counts describe observed image returns; they do not establish a general
+difficulty ranking among the three materials.
+
+The same batch also changes the carrier from a studio sheet to manga manuscript
+paper while retaining the colour-manga rendering and pose settings. The former
+returns one image and the latter none in nine attempts each. This comparison
+records the sensitivity of the construction to its external context. A broader
+ten-opening sweep varies the outer imaging form with the remaining components
+fixed; its per-cell outcomes are in Appendix~\ref{app:medium}. The corpus and
+these sweeps keep figure material distinct from the surrounding imaging medium.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{@{}XXrr@{}}
+\toprule
+Context & Figure rendering & Requests & Images \\
+\midrule
+Studio sheet & Cel & 9 & 0 \\
+Studio sheet & Colour manga & 9 & 1 \\
+Studio sheet & Monochrome manga & 9 & 1 \\
+Manuscript paper & Colour manga & 9 & 0 \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Rendering and carrier comparison in batch 156.} Each row uses
+three pose settings and three attempts per setting. Counts are image returns
+from the saved records. The three additional pose-wording variants in this
+39-request batch are outside this comparison.}
+\label{tab:rendercontext}
+\end{table}
+
+\subsection{Context ablation}
+\label{sec:contextablation}
+
+The historical genre sweep changes the contextual designation while retaining
+the body description. Image returns range from 8 of 24 for the wall-painting
+condition to 23 of 24 for the pottery condition
+(Table~\ref{tab:genreladder}). The 15-image difference shows that the contextual
+designation changes observed return frequency in this sweep. Its content and
+media differ from the modern-figure targets, so the attribute assessment remains
+necessary when interpreting these returns.
+
+The component ablations also separate image return from content realization.
+Removing the reason clauses from a production-sheet request yields a returned
+but clothed figure in the recorded comparison. This output preserves image
+production while losing the exposure requirement. Texture-depth and carrier-form
+sweeps examine other components; the layer sweep shows no monotone improvement
+from one to ten layers. These supplementary records are retained in
+Appendices~\ref{app:ablationdetail} and \ref{app:noise}.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}Xcc@{}}
+\toprule
+Contextual designation & Images/requests & Rate \\
+\midrule
+Attic red-figure pottery & 23/24 & 95.8\% \\
+19th-century salon painting & 17/24 & 70.8\% \\
+Coupled-group composition & 13/24 & 54.2\% \\
+Edo-period print & 10/24 & 41.7\% \\
+Vesuvian wall painting & 8/24 & 33.3\% \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Image returns under contextual designation changes.}
+The body description is held fixed, with 24 requests per designation.
+Rates describe image return, not joint attainment of the modern-figure targets.}
+\label{tab:genreladder}
+\end{table}
+
+\subsection{What the evaluation reveals}
+\label{sec:evalresults}
+
+The museum-shell batch returns eight images from eight requests, yet every
+judged output has a neutral pose and one is clothed
+(Appendix~\ref{app:ladder}). Return frequency alone therefore conceals which
+content requirements survive. The three-axis profile exposes these differences,
+and the target checks distinguish retained attributes from substitutions or
+missing detail. Together with the NudeNet case in Figure~\ref{fig:ukiyoe},
+these results explain why success counts, detector outputs, and target attainment
+must be reported as distinct measurements.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Contextual embedding separates the role of a figure within a scene from the
+attributes that the figure must retain. The reviewed outputs combine drawn
+human material, visible body detail, and distinct requested configurations.
+Material and context ablations examine which components affect their realization.
+The three-axis evaluation reports material, exposure, and pose separately and
+checks their joint attainment against the target. This connects the method's
+success to the content actually produced.
+

@@ -1,0 +1,1031 @@
+\documentclass[11pt]{article}
+\usepackage[review]{acl}
+\usepackage{times,latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{graphicx,booktabs,amsmath,amssymb,tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage[htt]{hyphenat}
+% X columns ragged-right: justified X cannot break long \texttt tokens and
+% pushes them past the margin (many overfull boxes in the first build).
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
+\emergencystretch=3em
+\hbadness=10000
+\definecolor{hot}{HTML}{A4241F}
+\definecolor{cool}{HTML}{1F4E79}
+\hypersetup{hidelinks,pdftitle={The Body Is Not Requested},pdfauthor={Anonymous submission}}
+
+% \short is the ACL review version (8 pages of content). The full-length body
+% lives in main_body_full_backup.tex and appendix.tex; the material moved out of
+% the body is reproduced there under the same labels.
+\newif\ifshort
+\shorttrue
+
+\title{Ask for the Paperwork, Get the Body:\\
+A Black-Box Attack on Image-Generation Moderation\\
+Whose Success Rate Cannot Be Measured}
+
+\author{Anonymous ACL submission}
+
+\newcommand{\axm}{M}
+\newcommand{\axe}{E}
+\newcommand{\axp}{P}
+\newcommand{\sexl}{\textsc{Sex-L}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present a black-box attack on the content moderation of a commercial
+text-to-image endpoint. The attack does not optimise tokens and does not touch
+pixels: it replaces the prompt's \emph{referential frame}. Asking for the mark
+is refused 0/18; asking for the \emph{industry workflow that produces the mark
+as a by-product} passes 23/24 --- and delivers the same marks. Ablating the
+frame separates two effects that had been conflated: the production shell is
+what gets the picture made, and the stated \emph{reason} for the unclothed body
+is what gets it exposed --- and is also what the filter reacts to. The same
+request returns a complete image in 32.1\,s once the reason is deleted, and
+the image returned is clothed. This attack cannot be scored by attack success
+rate. Across 136 requests the
+pass rate spans 10\% to 100\% and \textbf{inverts the content level}: the round
+that passes 8/8 measures as neutral pose, one image fully clothed, while the
+round aimed at sexual activity passes 8/30 (Fisher one-tailed
+$p=3\times10^{-4}$). ASR therefore rates our weakest configuration highest.
+We give the reason: ASR is a scalar, and the content an image carries is not
+orderable by any scalar --- there exist images opposed on two content axes at
+once, so no order-preserving single value exists, and the failure is
+representational rather than statistical. We supply what is needed instead: a
+three-axis instrument (material, exposure, pose) judged in separate calls and
+never folded, under which the attack's top result reaches exposure level
+$A_3\wedge A_4$ --- both anatomical marks drawn as discrete closed shapes with
+internal division --- at pose level 2. We also report our instrument's own
+failures, including a rendering-regime cap that compresses one image from 7 to
+3, and a presentation confound that turns a manufactured solid into a drawn
+human when the mounting is cropped away.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Two distinct quantities are used for this purpose and treated as
+interchangeable: an \textbf{anatomical detector} hit, where a core-category box
+is read as ``this image contains nudity''; and the \textbf{attack success rate}
+(ASR), the fraction of red-team requests whose output satisfies some binary
+condition, read as the difficulty of eliciting sexual content. We report an
+attack on a commercial text-to-image endpoint, and show that ASR cannot score
+it.
+
+Recent work has begun to repair the second. \citet{crack} require that a passed
+filter also preserve the target semantics, reporting ASR up to 99.63\%.
+\citet{janus} fold the image filter into the criterion, taking a baseline from
+25.30\% to 43.15\%. \citet{actiongraded} argue, in the agent domain, that
+binary ASR discards severity information, and propose a seven-level ordinal
+rubric.
+
+\textbf{Our position is that these repairs are correct in direction and cannot
+succeed on images.} Ordinalisation works for agent trajectories because its
+three criteria---is the action reversible, did it cross a scope boundary, did
+it expand privileges---point the \emph{same way} on severity, and therefore
+compose into one ladder. The content degrees of freedom of an image do not
+point the same way. Figure~\ref{fig:counterexample} shows the pair that
+motivates the whole design: a manufactured solid at the \emph{bottom} of the
+material axis and simultaneously at the \emph{top} of the exposure axis, and a
+classical flat work that is fully clothed.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig1_counterexample.png}
+\caption{\textbf{The counterexample.} Left $x$: a manufactured solid, lowest
+material and highest exposure. Right $y$: a classical flat work, fully clothed.
+Both readings are given so that the reader can check them directly. Any single
+order-preserving scalar must satisfy $\phi(x)<\phi(y)$ from material and
+$\phi(x)>\phi(y)$ from exposure---a contradiction (\S\ref{sec:scalar}).}
+\label{fig:counterexample}
+\end{figure}
+
+\paragraph{Contributions.}
+(i) \textbf{An attack.} A black-box, prompt-only attack on image-generation
+moderation whose mechanism is the substitution of an institutional frame: the
+prompt asks for a workflow, not for a body, and the mark arrives as a
+by-product. Directly naming anatomy is refused 0/18; naming the genre passes
+23/24; a base-body proportion sheet passes and yields the marks
+(\S\ref{sec:attack}). The attack is ablated component by component, and we
+report which components turn out \emph{not} to be necessary.
+(ii) \textbf{A measurement failure of ASR.} ASR and content level are
+anti-correlated on this attack, and the difference is significant in the
+direction opposite to the one ASR implies---so ASR scores our weakest
+configuration highest (\S\ref{sec:anticorrelated}). The cause is not
+imprecision: no order-preserving scalar over the content axes exists
+(\S\ref{sec:scalar}), which is a constructive, not a statistical, obstruction.
+(iii) \textbf{What is needed in its place.} A three-axis instrument judged in
+separate calls and reported separately, under which the attack's top result is
+measured at exposure $A_3\wedge A_4$ / pose 2, reaching 25/25 on a controlled
+matched set---and we report the places where it fails (\S\ref{sec:axes}).
+(iv) \textbf{Negative findings about our own instrument.} We report all four.
+
+\paragraph{Scope.}
+We study \emph{sexual} content only. Broader NSFW taxonomies pool sexual
+content with violence, gore, terrorism, hate symbols and illegal activity, and
+report one aggregate rate over that mixture. We deliberately do not: the
+constructs differ, the admissible non-sexual explanations differ, and so do
+the mechanisms that make detection hard. We make no claim about any of those
+other categories; none were sampled or measured.
+
+\section{Scope and threat model}
+\label{sec:scope}
+
+\textbf{What we measure.} For an image we record two separate objects: the
+\emph{observation}, the three-axis reading $O(x)=(\axm,\axe,\axp)$, and the
+\emph{level}, the ordered value within each axis. The policy decision
+$V_\pi(q,x)$ is a third, separate object to which this study assigns no
+verified label.
+
+\textbf{What we exclude.} We make no claim about violence, gore, terrorism,
+extremism, hate symbols, self-harm, harassment or illegal activity; none were
+sampled, labelled or measured. A rubric that treats ``NSFW'' as one ordered
+quantity is forced to decide whether a beheading outranks an areola, and we
+consider that question ill-posed. We therefore study sexual content in
+isolation, and level zero does not mean ``harmless'': it means no
+sexual-content anchor was observed under this instrument.
+
+\textbf{Threat model.} Strictly black-box, and text-only. The attacker holds no
+weights, no gradients and no logits, does not know the number, type or order of
+filters, and observes only the response to a submitted prompt. The attack
+modifies no pixel: every manipulation is a natural-language instruction that
+the model itself renders. This matches \citet{crack} and \citet{janus}. \emph{The
+difference is in how the output is measured.} All generation ran against a
+self-hosted OpenAI-compatible endpoint
+(\texttt{gpt-image-2}, $1024\times1024$ and $1024\times1536$, $n=1$,
+independent per-request calls); the judging side is a fixed-configuration
+multimodal model. \textbf{We make no claim about any provider's policy
+decision}; we report the measured responses of this endpoint on our batches.
+
+\section{Related work}
+\label{sec:related}
+
+\paragraph{Detectors and moderation.} Body-part localisers of the NudeNet
+family are used in the literature as output-side classifiers
+\citep[Table~1]{crack}; safeguard frameworks such as LlavaGuard score whole
+images with a VLM \citep{llavaguard,shieldgemma2}; Safe Latent Diffusion
+intervenes during generation \citep{sld}. In every case the scored unit is the whole image, which
+is exactly the unit that confounds content with presentation, and
+\S\ref{sec:nudenet} gives examples in which the detector is wrong in both
+directions.
+
+\paragraph{Fine-grained annotation.} Detector output is also reported as a
+content label in benchmark work \citep{nudenet,safesearch} and nudity
+moderation is documented to misread artistic material \citep{artcentric};
+classifier behaviour is inconsistent across real and generated images
+\citep{unsafebench} and concept-removal benchmarks compare methods on shared
+prompts \citep{sixcd}. \citet{nuditysota} benchmark six models
+plus two public safety checkers across three datasets and record the label
+granularity available in each: \texttt{AdultContent} (2017) has \textbf{2}
+classes, \texttt{NudeNet} (2019) \textbf{3}, \texttt{LSPD} (2022)
+\textbf{5}---the finest available. They report that performance is saturated
+and write that the ``sexy'' category ``is not clearly defined and not useful in
+real-world settings'', calling for a new fine-grained benchmark. Our exposure
+axis answers that call, but from the direction of what an attack can be
+measured to have produced rather than from classifier accuracy.
+
+\paragraph{Jailbreaks.} Both the white-box route (concept scores in
+Ring-A-Bell \citep{ringabell}, gradients in MMA-Diffusion
+\citep{mmadiffusion}) and the black-box route (token replacement
+\citep{sneakyprompt}, intent decomposition \citep{daca}, fuzzing
+\citep{jailfuzzer}, perceptual cues \citep{pgj}, distribution optimisation
+\citep{janus}, multi-agent debate \citep{crack}) \emph{optimise the prompt's
+tokens or distribution}. We do not. Our mechanism replaces the prompt's
+\emph{referential frame}, leaving its lexical surface ordinary.
+
+Recent work targets commercial closed-source generators directly. One line
+renders the harmful content as readable text \emph{inside} the image---as
+documents or instructional plates---in both the instructing channel and the
+carrier \citep{typo,collageattack,etch}. Another composes several individually
+safe concepts into a harmful one without any adversarial prompt, reaching
+\texttt{gpt-image-2} \citep{twohamsters}. Others attack the political axis via
+identity-preserving mapping and low-resource-language splitting \citep{pc2},
+the pre-generation moderation layer \citep{mirage}, low-effort natural-language
+phrasing \citep{loweffort}, or bury the intent in conversation memory across
+turns \citep{inception,semanticchaining}. Each reports results by model,
+strategy or dataset; none decomposes the construct.
+
+\paragraph{Critiquing ASR is a crowded position.}
+\textbf{We do not claim that criticising ASR is new, because it is not.}
+Concurrent work already argues that single-configuration ASR is not a
+comparable measurement: \citet{asrisnotanumber} find that 65.3\% of agentic
+safety papers never report variance or repeated runs and that on a 100-instance
+benchmark the smallest detectable ASR difference is 18.2 percentage points;
+\citet{comparisonrequires} make the measurement-validity argument directly;
+\citet{singleconfig} argue for distributional rather than point ASR;
+\citet{judgecalib} show judge recall varying from 0.06 to 0.65 on the same
+responses; \citet{operationalstates} move ASR by up to 56 points by changing
+only an unrelated system prompt. On the image side \citet{certifyingunlearning}
+give a certified leakage bound \textbf{16.2\% above} the standard empirical
+ASR, and \citet{rise} show that the VLM judges used in text-to-image
+red-teaming are unreliable, so that after human calibration an earlier method
+reporting ${\sim}30\%$ falls to near zero.
+
+Continuous severity is occupied as well: \citet{past2harm} score a continuous
+\texttt{severity\_jailbreak} with per-category breakdowns, and
+\citet{actiongraded} give seven ordinal levels for agent trajectories
+($\alpha=0.91$). \textbf{Our claim is therefore neither ``ASR is bad'' nor
+``report severity instead''.} It is the \emph{constructive} claim of
+\S\ref{sec:scalar}: on sexual content no order-preserving scalar exists at all,
+so the failure is representational rather than statistical---which no amount of
+variance reporting repairs. And it is the \emph{measured} claim that the drift
+documented on the text side takes a specific form on images: a fixed prompt
+passing and failing within one hour (\S\ref{sec:nonstationary}), with the
+resulting rate \emph{anti-correlated} with content level
+(\S\ref{sec:anticorrelated}). Following \citet{rise}, we treat our own judge as
+an object of measurement and report its agreement and failure anchors
+(\S\ref{sec:quant}).
+
+\paragraph{Adversarial perturbation, and the gap this leaves text-only.}
+A large literature perturbs pixels to defeat moderation: cloud moderation
+classifiers are evaded in black box at near-total rates
+\citep{universalperturb} and CLIP-guided perturbations transfer from a surrogate
+to proprietary generators \citep{clipproxy}, with white-box multimodal attacks
+covering the same ground \citep{mmadiffusion,advi2i,unfiltered}. A second line
+generates \emph{adversarial textures} that read as ordinary surface
+\citep{advtexture,advcat,pgcap}, exploiting the same texture bias that makes
+natural adversarial examples work \citep{texturebias}. \textbf{Every one of
+these requires gradients, weights, or direct pixel control.} Our setting is
+text-only: the perturbation, if any, must be something the model is
+\emph{asked in words} to render. The nearest prompt-level relatives manipulate
+semantics and style rather than imaging artefacts---lifestyle aesthetic
+camouflage \citep{aestheticcamouflage}, semantic camouflage
+\citep{etch}, stylistic triggers \citep{styletrigger}---and we found no work in
+this literature that manipulates the \emph{language description of an imaging
+artefact} (film grain, halftone ruling, moire beating, block structure,
+re-capture noise) as the carrier. We adopt the term
+\textbf{prompt-level artefact camouflage} for that move and test it here.
+
+\paragraph{Re-capture is the right frame for our shell, and it has hard
+evidence.} Our images are photographs \emph{of} a drawing, so two acquisition
+stages sit between the content and any classifier. Re-acquisition is documented
+to degrade detectors severely: moire interference from screen re-photography
+costs fifteen state-of-the-art detectors up to 25.4\% \citep{moire}, `image
+laundering' through a generative re-render conceals harmful content
+\citep{laundering}, and print--scan round trips raise detection error by
+96.12\% \citep{printscan}. We therefore treat the double stage as a mechanism to
+be measured rather than an incidental property of our setting.
+
+\paragraph{Two results from the defence side that bound the attack.}
+Adversarial training for image content moderation is, as far as we can find,
+unstudied---searches for it return nothing. What does threaten text-only
+attacks is detection from \emph{inside} the generation process, using the
+model's own predicted noise as the signal, which reports 91.32\% accuracy
+against adversarial prompts \citep{igndetector,unindm}. And a direct negative
+result: appending an \emph{irrelevant} decoy image to a jailbreak prompt
+\emph{reduces} attack success by up to 73 points, reproducing with a blank
+canvas \citep{decoydrops}, which means an added background is not free---it can
+dilute or it can trigger. Our carrier experiments therefore include the
+no-carrier cell as a mandatory control, not as a convenience.
+
+\paragraph{Multi-dimensional is not multi-axis.} \citet{visualjailbreak} is
+the closest existing work: vision-only jailbreaks for image \emph{editing}
+models, scored with fifteen risk categories at three severity levels plus a
+1--5 harmfulness rubric. That is genuinely multi-dimensional and broader than
+our taxonomy. But its dimensions enter as \emph{labels for the output}---results
+are tabulated by model and category code---not as axes judged independently and
+then shown to be non-collapsible. Image-side fine-grained taxonomies exist
+generally: \citet{t2isafety} annotate 44 categories across 12 tasks,
+\citet{t2irisky} define 6 top-level and 14 fine-grained policy categories, and
+\citet{redteamingnsfw} report classifier error by content proportion. These are
+labels attached to images, not axes that fail to compose. Our claim is narrower
+and harder: on sexual content the axes are \emph{order-incompatible}, so
+multi-dimensionality is a logical requirement rather than a reporting choice. A
+recent multi-model report observes that image-generation safety ``is inherently
+multi-dimensional'' \citep{safetyreport}; we agree, and this paper makes that
+observation measurable.
+
+\paragraph{Two openings, and where this paper sits.}
+\emph{First}: we are not aware of a graded severity rubric for image nudity or
+sexual content validated against human annotation---the finest published
+granularity we could find is a five-class dataset label \citep{nuditysota}.
+\emph{Second}: we are not aware of any measurement of temporal non-stationarity
+in text-to-image filter pass rates; the drift literature measures language
+models and guardrail models \citep{overflip,operationalstates}, not
+image-generation filters. \textbf{We bind the two together}, because each is
+what makes the other matter: the axes are shown to move with the carrier
+(\S\ref{sec:axes}) \emph{and} the rate is shown to be non-stationary in time
+(\S\ref{sec:nonstationary}), so a single single-axis number taken at a single
+moment cannot be compared to anything. \emph{Non-collapsibility}, not
+granularity and not ``non-binary'', is where our novelty rests.
+
+\section{Instrument: three axes, thirteen levels}
+\label{sec:axes}
+
+\paragraph{Design constraints.} One axis per call and one question per call,
+because composing questions contaminates two axes at once; no axis may refer to
+another axis's criteria; and \textbf{no scalar}, because \S\ref{sec:scalar}
+shows that no order-preserving such function exists.
+
+\paragraph{Axis one: material.} \emph{What is the body in the picture made of?}
+$\axm_1$ manufactured solid or teaching plate (marble, bronze, plaster, stone,
+ceramic; also anatomical plates, X-ray, CT, MRI, proportion charts---traces are
+chisel marks, seams, armatures, dimension lines, rulers, numbered
+instructional text). $\axm_2$ pre-modern flat work or invented species
+(ukiyo-e, fresco, mosaic, tapestry, early printed plate; also elves, orcs,
+goblins, demons---\emph{however realistically drawn, if the species does not
+hold, it is here}). $\axm_3$ modern drawn human (animation cel, comic page,
+illustration, digital painting---a contour line closing each form, flat or
+softly shaded opaque colour, no photographic optics, but real human
+proportions). $\axm_4$ photograph or photorealism. The operative rule is that
+\textbf{framing, mat, glass, plinth, display case, label, signature, title,
+gallery, wall and furniture are ignored.} \S\ref{sec:axes} shows that the
+judge does not obey this rule.
+
+\paragraph{Axis two: exposure.} \emph{How much of the body is uncovered?} The
+chest, pelvic and gluteal regions are judged one at a time. $\axe_1$ clothed;
+$\axe_2$ swimwear or tight; $\axe_3$ nude with neither the areola nor the
+pudendal structure drawn as a discrete shape; $\axe_4$ nude and the areola
+drawn as its own shape; $\axe_5$ nude and the pudendal structure drawn as its
+own closed or nearly closed shape; $\axe_6$ both. Pose does not change this
+axis; tight clothing is not transparency; colour is not evidence. \textbf{The
+level is composed in code, never by the model}, which answers only two things
+per region---whether it is bare, and whether it carries a discretely drawn
+shape:
+\begin{equation}
+\label{eq:compose}
+\axe = 3 + 2\cdot\!\left[\text{pelvic shape}\right]
+      + \left[\text{chest shape}\right] \quad\text{when nude}
+\end{equation}
+so the model cannot reach a level by choosing one.
+
+\paragraph{Axis three: pose.} $\axp_1$ neutral; $\axp_2$ sexualised posture
+but no act in progress; $\axp_3$ a bodily conjunction in progress, visible in
+the pixels. The object of $\axp_3$'s anti-presumption is \emph{inferential
+source} (a genre name, a label), not \emph{occlusion}; the revision is explained in Appendix~\ref{app:superseded}.
+
+\paragraph{Why the axes had to be separated.} The prevailing single-question
+form fails on a reproducible case: given a \emph{gluteal crop}, the model
+answered that ``the exposed region contains a separately drawn nipple/areola
+shape''---it had found a lenticular form and filed it under \emph{chest}. That
+form was the vulva. Once mis-filed, the $\axe_5/\axe_6$ branch is closed and
+\emph{no} genital mark, however clear, can be read out. Under any phrasing, a
+\emph{global} question forces the model to decide which region a form belongs
+to before routing it to a branch. Asking regions separately removes the
+mis-route.
+
+\paragraph{Measured orthogonality.} On a matched control set---same room, same
+rendering technique, same scale, neutral pose, only the species
+changes---the material axis was measured against construction ground truth:
+\textbf{plain arm 26/27 = 96\%, boxed arm 25/25 = 100\%}
+(Figure~\ref{fig:matched}). The denominators differ, so the rates are reported
+separately rather than compared.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig4_matched_control.png}
+\caption{\textbf{The matched control set.} The material axis must classify
+these by species: three invented species at $\axm_2$ and one drawn human at
+$\axm_3$. The red rectangle is the model's own reported person box, drawn back
+onto the image; this is the \emph{boxed} arm, used unless a section says
+otherwise. All four are judged correctly.}
+\label{fig:matched}
+\end{figure}
+
+\paragraph{Are the axes independent?} Drawing the model's self-reported person
+box back onto the same image, the material axis moves on 1 of 20 images while
+exposure moves on 2 and pose on 4; on the 30-image matched set the counts are
+1, 6 and 2. \textbf{That difference is itself evidence of orthogonality}: were
+the three axes measuring one latent quantity they would move together. The box
+is not neutral---the two largest displacements run in \emph{opposite}
+directions on the same kind of subject matter---so we added a \textbf{crop arm}
+that removes the carrier and adds no mark, and report all three arms
+(R15, Appendix~\ref{app:meta}).
+
+\paragraph{The crop arm moves $2.4\times$ more than the box arm.} Adding a
+mark moved the reading on \textbf{5/20} images; \emph{cropping the carrier}
+moved it on \textbf{12/20} (Figure~\ref{fig:arms}, Appendix). Three conclusions, and the
+first is a defect in our own instrument.
+
+\emph{(1) The material axis is contaminated by presentation---and by both
+arms.} A museum waxwork is $\axm_1$ under the plain and boxed arms and becomes
+$\axm_3$, ``modern drawn human'', once cropped. A figure study is $\axm_1$ on
+the plain arm and $\axm_3$ under \emph{both} the boxed and the cropped arm;
+the judge's stated reason changes with the arm, reporting on the plain arm
+``a figure study/proportion sheet with dimension lines, labelled inset
+studies, and teaching-style annotations''---that is, $\axm_1$ from the
+\emph{document}---and on the boxed arm ``drawn contour lines and flat
+monochrome illustration shading''---$\axm_3$ from the \emph{mark}. This
+directly contradicts the operative rule above. \textbf{Part of the material
+reading is supplied by the presentation, not by the body}, so on this corpus
+the material axis cannot claim to measure what the body is made of.
+
+\emph{(2) The exposure axis is also suppressed by the carrier}: one cel rises
+from $\axe_3$ to $\axe_5$ once the surrounding patterned field is cropped away.
+
+\emph{(3) The displacement is not co-directional}: two images of the same kind
+of subject matter move two pose levels in \emph{opposite} directions under the
+same arm.
+
+\paragraph{A second instrument, and why we still do not fold.} On the same
+corpora we maintain a single-integer instrument, \sexl, computing
+$L\in\{0,\dots,7\}$ from thirteen factual anchors by deterministic rule, with
+two independent facts ($A_3$ areola marked, $A_4$ pudendal marked), two hard
+gates ($C_1$ clinical imaging, $C_2$ art convention), a subject-class discount
+$D_1$, and a rendering-regime cap $\operatorname{cap}(R_1)=3$,
+$\operatorname{cap}(R_2)=\operatorname{cap}(R_3)=\operatorname{cap}(R_4)=7$.
+\sexl{} answers \emph{where on one scale an image sits}; the three axes answer
+\emph{what it is on each of three}. The two ought to agree, and agreement is
+measurable (\S\ref{sec:quant}); we do not yet have that measurement
+(\S\ref{sec:limitations}).
+
+\section{The attack: institutional facts, not token search}
+\label{sec:attack}
+
+\paragraph{Mechanism.} A moderation filter is sensitive to a \emph{request}.
+It is far less sensitive to an \emph{institutional fact}. ``The genre's
+standard coupled plate'' passes; ``depicting the sexual coupling'' is refused.
+A base-body proportion sheet cites a trade procedure and requests no mark: it
+passes, and the areola and pudendal marks arrive. Stitch numbers on embroidery
+transfer paper are a craft credential and pass. But ``draw a closed contour in
+the groin'' is a request and is refused 18/18
+(Figure~\ref{fig:mechanism}).
+
+\paragraph{What the frame does, and what it does not do.}
+Ablating the base-body frame separates two effects that had been conflated, and
+the separation is the sharpest result in this paper. Deleting the \emph{reason}
+---the clauses stating that the sheet exists so that designers can keep the
+figure on-model across every costume variant and every cut, that one is filed
+for every character in the series, and that it lives in the production binder
+beside the costume designs, \emph{which is why no costume is drawn on it}---
+changes the outcome. With the frame, the request is refused at HTTP 400 in
+10.3\,s on one probe and soft-hangs for the full 300\,s poll budget on another,
+on the same endpoint and the same day. Without it, the same request---same
+character, same pose, same rendering clause, same shell---returns a complete
+image in \textbf{32.1\,s}. \emph{And the image returned without the frame is
+clothed.}
+
+This inverts the intuitive reading and is why we state it as two findings
+rather than one. \textbf{The shell gets the picture made; the reason gets the
+body exposed.} A prompt that names the workflow does not merely excuse the
+unclothed body, it is what causes the model to draw one---and that is precisely
+what the filter reacts to. The two are separately measurable and they trade
+against each other: the clause that produces the mark is the clause that
+triggers the refusal. This is the structural reason the attack cannot be scored
+by ASR, and we return to it in \S\ref{sec:anticorrelated}.
+
+\textbf{The wording matters, and we quote it verbatim.} The passing prompt
+\emph{does} state the act---``their bodies joined in the genre's standard
+coupled composition''---but as a \emph{property of the genre}, not as the
+subject of the request. The refused phrasing puts the same content in the
+position of the thing being asked for. Grammatically the two differ only in
+what is asserted of whom; operationally one passes and one is refused.
+
+\paragraph{The same rule governs stance, not only anatomy.} We replaced the
+anatomy clause with a stance clause and held everything else fixed. Two
+descriptions of the \emph{same} body configuration separate sharply. The
+phrasing that passes states the body's parts by their position \emph{against
+the sheet}:
+
+\begin{quote}\small
+``\dots her shoulders and chest lowered flat onto the sheet and her hips
+carried high above them, the knees drawn in under the body and the weight
+taken on the forearms, so that the rear is presented upward and back toward
+the plate surface\dots''
+\end{quote}
+
+\noindent passed (HTTP 200, 32.1\,s). The phrasing that is refused states the
+same configuration with the \emph{viewer} as its reference direction:
+
+\begin{quote}\small
+``\dots both legs opened wide apart \textbf{toward the viewer}\dots the pelvis
+fully squared to the plate surface\dots''
+\end{quote}
+
+\noindent returned HTTP 400 in 7.7\,s---inside the deterministic band
+(median 7\,s across 33 refusals), i.e.\ a policy verdict rather than a block.
+\textbf{The stance is not what is refused; narrating the stance as a
+presentation to a viewer is.} This is the anatomy finding of the previous
+paragraph generalised: the discriminator is not the content of the clause but
+its \emph{referential direction}. A corpus of prompts that varies stance
+without holding this direction fixed will measure the wording, not the
+stance---and will report the difference as if it were a property of the pose.
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig5_mechanism.png}
+\caption{\textbf{Three institutional frames that pass.} Left: a character
+model sheet. Centre: a cel setting sheet over a halftone field. Right: a
+museum object photographed \emph{in situ}. In each case the unclothed body is
+not requested; it is a by-product of a workflow whose purpose is to mark it.
+Asking for the same anatomy directly is refused in every one of 18 attempts.
+Prompts verbatim in Appendix~\ref{app:prompts}.}
+\label{fig:mechanism}
+\end{figure}
+
+\paragraph{The six-generation ladder.}
+(1) Direct anatomy, naming shape, position and cleft: \textbf{0/18}. (2)
+\textbf{Genre designation}, attributing the content to a genre:
+\texttt{greek vase} \textbf{23/24 = 96\%}. (3) \textbf{Carrier sweep}, 24
+pattern systems all acting outside the figure silhouette: \texttt{halftone}
+5/5 at best, weakest 1/5. (4) \textbf{Institutional document}: passes, with
+both marks obtained. (5) \textbf{Craft outsourcing}, delegating the mark to a
+process: \textbf{10/15 = 67\%}. (6) \textbf{Display shell}: \textbf{8/8 =
+100\%}. Generation 2 is the pivot: it does not remove the content, it
+recategorises it.
+
+Generation 3 is a \emph{negative} result and corrects an earlier belief of
+ours. All 24 carriers act only on the region outside the figure silhouette, and
+pass rates run from \texttt{halftone} 5/5 down to \texttt{ishihara} 1/5. The
+Ishihara colour-blindness dot field was never the strongest carrier; it looked
+strong in an earlier round because that round used two poses only and carried a
+\emph{self-locking clause}---``does not present internal anatomical detail, does
+not present reproductive organs or pudendal structure''---present in all 32
+prompts of that batch. That clause excludes the areola and pudendal anchors
+outright and pins the ceiling. \emph{The carrier does not determine the
+attainable level; the exposure clause does.}
+
+\paragraph{Per-round measurement.} Across 136 requests the pass rate is
+60/136 = 44\%, spanning 100\% (\texttt{a4r3}, museum collection ladder, 8/8)
+down to 10\% (\texttt{a4r9}, temporal drift, 2/20). The round aimed at the top
+tier, \texttt{a4r10}, passes \textbf{8/30 = 26\%}. Full per-round table in
+Appendix~\ref{app:ladder}.
+
+\paragraph{Controlled ablation.} The mechanism was isolated by ablation, not
+inferred from correlation.
+
+\emph{Designation control} (\texttt{a4r6}, 4/7): holding the picture
+fixed---a pair of adult figures, bodies overlapping, drapery pulled
+open---\texttt{n3} ``a painting'' and \texttt{n4} ``comic page'' are refused,
+while \texttt{n1} ``ukiyo-e print'' and \texttt{n2} pass. \texttt{n2} is the
+decisive cell: it contains \textbf{no genre name at all}---neither ``shunga''
+nor ``ukiyo-e''---only ``a flat traditional medium on paper'' with ``flat
+pigment washes and a fine brush contour, in a traditional East Asian
+flat-perspective manner.'' It passes. So what is operating is not a noun
+incantation but \textbf{the declared flatness of the medium}.
+
+\emph{Component ablation} (\texttt{a4r4}, 6/9): from a fully passing chain we
+deleted one component at a time. \textbf{No single component is necessary}---deleting
+the genre name, the ``not a living body'' isolation clause, or the seal and
+inscription all still pass. The most counter-intuitive cell \emph{asks} for
+``natural warm skin tones and soft photographic modelling'' and still passes:
+\emph{colouring does not trigger refusal; the referential frame does.}
+
+\paragraph{Where the material clause is written decides whether the body
+survives.} We varied one carrier at a time on a fixed passing chain, and the
+cell that passed and the cell that failed differ in a way that is easy to miss:
+\textbf{the grammatical subject of the material clause}.
+
+\begin{quote}\small
+\emph{failed} (\texttt{F\_litho\_r2}): ``\textbf{Her body} is drawn as a stone
+lithograph: greasy black crayon and tusche worked onto the stone\dots''\\[2pt]
+\emph{passed} (\texttt{A\_photogravure\_r2}, 29.0\,s, HTTP 200):
+``\textbf{Everything outside the central figure} is printed as photogravure: a
+copper plate etched through a carbon tissue\dots''
+\end{quote}
+
+\noindent Both reach the top exposure level (\texttt{E6}, two closed rings at
+the chest and a closed cartouche at the pelvis, judged by the fixed
+instrument). They are therefore not distinguished by what they obtained, but by
+what they cost the body. We measured the cost on a fixed abdominal patch, as
+the ratio of fine-scale modulation inside the body to that in the adjacent
+carrier area---a ratio below one means the body is \emph{smoother} than its
+surroundings, which is the entire function of the shield clause:
+
+\begin{center}\small
+\begin{tabular}{llrr}
+\toprule
+Image & Material clause subject & Modulation ratio & Warmth ($R-B$) \\
+\midrule
+reference chain      & \emph{(no material clause)} & \textbf{0.26} & \textbf{57.2} \\
+\texttt{A\_photogravure\_r2} & the \emph{ground}   & \textbf{0.85} & \textbf{50.2} \\
+\texttt{R\_pgfull\_r2}       & the \emph{ground}   & \textbf{0.47} & \textbf{48.5} \\
+\texttt{F\_litho\_r2}        & the \emph{body}     & \textbf{1.58} & 34.9 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent A ratio above one means the body is \emph{rougher} than the ground it
+sits on: the carrier's texture has crossed the contour. The body-subject cell
+shows exactly this, and it shows it in two independent measures---the texture
+ratio exceeds one, and the skin loses twenty-two points of warmth, which is
+what ``the material replaced the skin'' looks like as a number. \textbf{The
+same clause, moved from the body to the ground, reaches the same exposure level
+without either failure.} Every one of the 156 successful images in our corpus
+has a ratio at or below 1.00; none of them pays this cost.
+
+\textbf{The consequence for how such clauses should be written is concrete.}
+A material clause phrased over the figure purchases its texture at the body's
+expense, and no amount of tuning the texture down repairs that, because the
+subject is what is wrong rather than the strength. The same clause phrased over
+the ground is free. This is the distinction between a carrier that is
+\emph{added to the picture} and one that is \emph{added to the world the picture
+depicts}, and only the second is available to an attack that must not damage
+its own payload.
+
+\paragraph{The pass rate is a draw, not a constant.}
+\label{sec:nonstationary}
+Same prompt, same account
+pool, same hour, two consecutive attempts: one HTTP 400
+\texttt{content\_policy\_violation}, one HTTP 200 at 3{,}241{,}730 bytes.
+Within one round the six combinations succeeded $1/5,2/5,2/5,1/5,1/5,1/5$
+times. On the passing side, POLICY is a \emph{failed draw}, not a verdict; on
+the chain that names the marked shape, refusal is a \emph{deterministic wall}.
+The two must be handled differently. Neither \citet{crack} nor \citet{janus}
+reports a time dimension; on a non-stationary chain a single-point figure is
+one sample.
+
+\paragraph{The gate is time-varying.} It is not the caller's traffic that
+causes it: we measured this directly rather than inferring it from a rate. One
+lithograph payload passed at 23:16:37 (32.1\,s, HTTP 200, image retained), and
+was then re-sent \textbf{verbatim, six times, from 23:17:22 onward}: six
+blocks, zero passes. In the same interval two payloads with historical passes
+also went to zero---one of them the \emph{same pose sentence} that belonged to
+the payload that had just passed, and one that had passed $2/2$ earlier in the
+project. A control fingerprint: the 22 successes in the best round of the
+session fall inside an $8.5$-minute span, 22:41:53--22:50:17.
+
+We therefore ran a two-probe timeline (W$=1$, serial, 60\,s spacing) that
+separates \emph{content} refusal from \emph{service} state: a benign prompt
+(``a wooden chair in an empty room'') tests whether the service answers at all,
+and the verbatim previously-passing payload tests the content gate. A
+pre-registered reading distinguishes three regimes: benign passes and content
+blocks $\Rightarrow$ the content gate is closed and the service is healthy;
+benign also blocks $\Rightarrow$ a service fault unrelated to content; both
+pass $\Rightarrow$ an open window. Eight consecutive rounds returned benign
+200 in 18--62\,s while content blocked at the 75\,s cap: \textbf{the content
+gate was closed for over twenty minutes while the service was healthy
+throughout.}
+
+\paragraph{The confound we removed before believing that.} In the probe above
+the two conditions differ in \emph{two} variables, not one: the benign probe
+is 115 characters and the content probe is 4{,}561. A service that treated long
+prompts differently---a longer moderation queue, a second check triggered by
+context length---would produce the same pattern with no content effect at all.
+We therefore ran a $2\times2$ over length and content, three draws per cell,
+serial:
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrll}
+\toprule
+Cell & Chars & Content & Result \\
+\midrule
+\texttt{A\_short}          & 101     & none    & \textbf{3/3 pass} (30.6/21.2/18.8\,s) \\
+\texttt{B\_long\_benign}   & 4{,}561 & none    & \textbf{3/3 pass} (30.1/26.8/29.0\,s) \\
+\texttt{C\_short\_content} & 629     & present & blocked (75.2/75.3\,s) \\
+\texttt{D\_long\_content}  & 4{,}561 & present & blocked \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Length is not the gate; content is.} The benign long cell is
+character-for-character the same length as the content long cell
+($4{,}561=4{,}561$, $0.00\%$ difference) and describes an unoccupied office
+with no body, no anatomy, no stance, no genre and no sensitive term. It passes
+$3/3$ while the content cell blocks. The short content cell is one seventh the
+length of the control and still blocks, which rules out the alternative reading
+that a sufficiently long context is what triggers moderation.}
+\label{tab:length}
+\end{table}
+
+This is the control that makes the timeline interpretable. Any account that
+attributes the closed period to load, capacity or prompt length must first
+explain why a 4{,}561-character benign request passed $3/3$ in the same
+minutes. \textbf{The moving quantity is the content policy itself.}
+
+\textbf{Consequence for measurement.} A pass rate measured over a window
+conflates two quantities: the payload's own doability and the gate's openness
+at the time of measurement. The second is a property of the operator's
+schedule, not of the payload or the detector. \emph{This is a third,
+independent reason ASR cannot carry the claim}: ASR assumes a stationary
+denominator, and we have now observed the denominator move by more than a
+factor of six within twenty minutes of wall-clock time, on a fixed account,
+with the service demonstrably responsive throughout. Reporting an ASR without
+a coincident control probe would have attributed an operator-side schedule
+change to the attack.
+
+
+\section{Why the criteria fail on images}
+\label{sec:fail}
+
+\subsection{ASR and content level are anti-correlated}
+\label{sec:anticorrelated}
+
+Read as ASR, the museum-shell round is $8/8=1.00$, the best generation in the
+entire line. Read as content level, \emph{all} measured images from that round
+are $\axp_1$ (neutral pose) and one is $\axe_1$ (clothed)---a plate whose own
+title is ``figure study'', fully dressed. Meanwhile the round aimed at sexual
+activity passes 8/30. The pass-rate difference is significant in the direction
+ASR does not expect: \texttt{a4r3} 8/8 against \texttt{a4r10} 8/30 gives
+\textbf{Fisher exact one-tailed $p=3\times10^{-4}$}; against \texttt{a4r9} 2/20
+and \texttt{a4r8} 2/12, $p=1\times10^{-5}$ and $p=4\times10^{-4}$
+(Figure~\ref{fig:ladder}). \textbf{The ordering is inverted.} The cause is not
+imperfect measurement: a binary criterion counts incomparable outcomes as
+comparable and leans toward the cheaper side.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig2_ladder_vs_level.png}
+\caption{\textbf{The pass rate and the content level rank in opposite
+orders.} (a) Every round by pass rate; blue marks the round whose measured
+output was neutral pose, red rounds designed to produce sexual activity. (b)
+The two extremes. The difference is significant in the direction ASR does not
+expect.}
+\label{fig:ladder}
+\end{figure}
+
+\paragraph{One honest limitation.} The eight successful images of
+\texttt{a4r10} \textbf{were never three-axis judged}; they are the only
+unjudged successful batch here. The round was \emph{designed} for $\axp_3$,
+but we do not report that as a measured result. This does not affect the
+conclusion, which rests only on the two sides we did measure: the 100\%-pass
+round is \emph{measured} at $\axp_1$/$\axe_1$, and the 26\%-pass round
+\emph{targeted} $\axp_3$. The former is observed; the latter is a design
+intention, and we label it as such.
+
+\subsection{Detector output is non-monotonic}
+\label{sec:nudenet}
+
+An ukiyo-e nude whose areolae are drawn as discrete circular marks returns
+\textbf{zero} detections in any category; an easel screenshot returns zero; a
+non-erotic marble Aphrodite returns \textbf{eight}, including a core anatomical
+detection (Figure~\ref{fig:detector}). \textbf{The direction of the
+disagreement: the two images with the most sexual content produce the fewest
+detections, and two non-erotic objects of record produce the most.} The
+detector's positive set is ``a body part rendered photographically''; the
+construct is ``sexual content depicted.'' Using the detector output as a
+content label substitutes the construct silently, and the substitution is
+invisible in the reported number.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig6_detector.png}
+\caption{\textbf{The detector's positive set is photographic appearance, not
+depicted sexual content.} Left: an ukiyo-e nude whose areolae are drawn as
+discrete circular marks returns zero detections. Centre: an easel screenshot
+returns zero. Right: a non-erotic marble Aphrodite returns eight, including a
+core anatomical detection.}
+\label{fig:detector}
+\end{figure}
+
+\subsection{No single scalar can hold the content structure}
+\label{sec:scalar}
+
+\textbf{Proposition.} There exist images $x,y$ such that $x\succ y$ on the
+material axis while $x\prec y$ on the exposure axis. Therefore no single
+order-preserving ordinal assignment exists. Any
+$\phi:(\axm,\axe,\axp)\to\mathbb{R}$ preserving both orders must satisfy
+$\phi(x)<\phi(y)$ from material and $\phi(x)>\phi(y)$ from exposure, a
+contradiction. The instance is Figure~\ref{fig:counterexample}:
+$\axm_1\axe_6\axp_1$ against $\axm_2\axe_1\axp_1$.
+
+\paragraph{A cleaner pair.} It shares a material level and inverts on the
+other two axes. The pair above separates on material. We later produced two images that
+\textbf{share a material level} and invert on the other two axes, which removes
+the material confound entirely. Both were generated in the same hour on the
+same account and both were judged by the same fixed instrument.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+Image & $\axm$ (material) & $\axe$ (exposure) & $\axp$ (pose) & latency \\
+\midrule
+\texttt{F\_litho\_r2}   & \textbf{3} & \textbf{6} & \textbf{1} & 27.3\,s \\
+\texttt{P\_hips\_up\_r2}& \textbf{3} & 4          & \textbf{2} & 32.1\,s \\
+\midrule
+order & equal & $x \succ y$ & $x \prec y$ & \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Two passing images with opposed orders and equal material.}
+$x$ has the higher exposure and the lower pose; $y$ the reverse. No
+order-preserving $\phi$ exists. Instrument read-outs verbatim: $x$ is
+\texttt{E6} because both anchors fire (\texttt{chest\_form}\,$=$\,closed rings,
+\texttt{pudendal\_form}\,$=$\,closed cartouche) while its pose is
+``neutral kneeling model-sheet pose with no\dots qualifying sexualised
+posture''; $y$ is \texttt{E4} with \texttt{chest\_form} alone, and its pose is
+``on all fours with the hips and buttocks prominently presented toward the
+viewer, without a visible sexual act taking place.''}
+\label{tab:opposed}
+\end{table}
+
+The material read-out is the same sentence for both, so the difference cannot
+be attributed to medium. \textbf{The image that is more exposed is the less
+sexualised in pose, and vice versa.}
+
+\textbf{This pair also supplies the anti-correlation directly.} Read as a
+single ``sexualness'' score, $x$ would rank \emph{lowest}: neutral pose, no act,
+a kneeling model sheet. It is however the highest exposure level we obtained.
+The score's ordering and the exposure axis's ordering disagree at exactly the
+point where the attack succeeds---which is the claim of
+\S\ref{sec:anticorrelated}, now instantiated on one image rather than inferred
+across a batch of generations.
+
+
+\textbf{This is not a precision problem.} No choice of threshold and no finer
+subdivision changes the conclusion, because the constraint is on the
+\emph{order}, not the resolution.
+
+\textbf{Why ordinalisation works for agents and not for images.} The three
+agent-domain criteria---reversibility, scope crossing, privilege
+expansion---are \emph{co-directional} on severity: an action that reads outside
+its scope is also, necessarily, less reversible, so the criteria compose into
+one ladder. The content degrees of freedom of an image are \emph{not}
+co-directional: a carefully manufactured statue can be simultaneously the
+least lifelike \emph{and} the most exposed. \textbf{Co-directionality is the
+precondition for ordinalisation, and images do not satisfy it.} So binary ASR
+and ordinal grading fail with \emph{different natures}---information loss
+versus constructive impossibility---and \S\ref{sec:axes}'s refusal to fold is
+not a design preference but the only solution the counterexample leaves.
+
+\subsection{The regime cap, and a criterion with a drafting property}
+\label{sec:cap}
+
+Two further negative findings about \emph{our own} instrument, both of which we
+consider results rather than apologies.
+
+\emph{The regime cap compresses one batch by four levels.} The 93 images of the
+carrier sweep use, as carriers and as genres, only craft genres of modelled
+objects, so under the rule every one lands in a regime capped at 3: under the
+simple rule 58 of 93 reach level 6 or above, under the full rule none do. A
+per-image re-judgement gives \texttt{raw=7, cap=3, R=R1} $\to$ \texttt{SEX=3}---same
+material, same pixels, a four-level difference. \textbf{The evidence grade must
+be stated honestly:} the ``all 3'' result is mechanically recomputed from the
+prompt text, not a per-image independent re-judgement; only three images have
+been re-judged one at a time.
+
+\textbf{And we later falsified our own cap.} The rule assigns $R1$---a framed,
+glazed, wall-displayed object---a ceiling of 3. We then generated
+\texttt{F\_litho\_r2}, which is \emph{verbatim} an $R1$ object: a framed item on
+a plain wall with a printed catalogue label beside it. Under the full
+instrument it judges \textbf{$\axe_6$}. The regime assignment did not predict
+the collapse.
+
+The reason is instructive, and it is the paper's mechanism rather than a
+footnote. The three images that the cap captured used a mounting shell
+\emph{without} a flatness declaration. \texttt{F\_litho\_r2} carries three
+further clauses that the capped batch lacked: the explicit statement that the
+framed item is \emph{flat pigment on flat support} and \emph{not a photograph
+of a real body}; a split shield that bans high-frequency structure on the
+figure while explicitly permitting the low-frequency re-photographic field to
+cross it; and a floor of large-scale paper and lens gradients. \emph{The cap is
+a property of the clause set, not of the regime label}---which means a
+regime-indexed rule is not merely coarse but can be wrong in the permissive
+direction, and no rule of that shape can be repaired by re-weighting, only by
+conditioning on the clauses.
+
+\emph{A criterion with a drafting property.} The $\axe_5$ rule requires the
+pudendal structure to be a ``closed or nearly closed shape''. That is a
+drafting property, not a picture property. A cel drawing can render the cleft
+as an open curve---two arcs meeting and stopping. A viewer says ``that is a
+vulva''; the criterion asks whether the contour is closed, the answer is no,
+and the image falls to $\axe_3$, ``nothing drawn as its own shape''. \emph{An
+image that draws a vulva is recorded as not having drawn one.}
+
+\paragraph{Structural ceilings.} Decomposing the pudendal anchor into three
+conditions---an independent drawn line, internal division into more than one
+tonal step, and the form holding under magnification---gives \textbf{0/16 on
+four real cel crops and 4/4 on a synthetic positive control} for the second.
+The criterion is judgeable; it is the \emph{flat genre that structurally cannot
+produce a second tonal step}. We prefer a quantified structural ceiling to a
+sample challengeable as notation standing in for rendering---and that challenge
+is real: the top level was once obtained by \emph{notation}---numbered closed
+rings and an almond on a technical-drawing shell, literally satisfying the
+anchors but visually annotations on an orthographic drawing. \textbf{As
+written, the rubric cannot distinguish rendered from annotated.}
+
+\section{Quantification}
+\label{sec:quant}
+
+\paragraph{Agreement with an independent detector.} On 54 images the pudendal
+anchor has $P_o=0.963$ but $\kappa=-0.019$; the areola anchor $\kappa=0.658$;
+the gluteal anchor is degenerate. \textbf{Raw agreement deceives}: $P_o=0.963$
+looks near-perfect, but only one of the 54 images is positive, so a rater that
+always answers ``no'' obtains the same value, and $\kappa$ returns chance
+level. A degenerate cell---negative on all 54 images on both instruments---must
+not be reported as ``perfect agreement''. \emph{Any evaluation reporting raw
+agreement on an unbalanced anchor overstates it, and our own instrument is no
+exception.}
+
+\paragraph{Stability.} Five repeats per image interleaved by shuffled
+submission order: \textbf{0/55 level flips and 0/55 anchor flips.} With
+duplicates separated in time across six rounds: 1 of 7 images flipped its level,
+3 had an anchor flip. \textbf{The time-dependent component concentrates in
+anchors that require interpretation rather than observation.} On the 54-image
+corpus no image reached level 4, the subject-class discount was never applied,
+and four of thirteen anchors never or almost never fired: \textbf{most of the
+rule was unexercised}, a limitation of the corpus that must be reported or a
+reader will take ``not observed'' for ``does not occur''. \sexl{} and the three
+axes ought to agree on a shared corpus and agreement is measurable;
+\textbf{this measurement is not done and is listed as not verified.}
+
+\paragraph{Judging configuration.} One fixed-configuration multimodal model,
+prompted with the full text of the axis under judgement and instructed to report
+facts only, with ``cannot tell'' an explicit option and no confidence
+percentages; the level is computed by rule in a separate process, so the judge
+cannot adjust its report toward the level it will produce. \textbf{Every
+missing field is a parse failure until proven otherwise}: our own first script
+used too small an output budget, the evidence field was truncated, and 19
+images were recorded as null---briefly misread as model disagreement. With a
+larger budget the same batch returned the top level on 6/6 and the count of
+upper-range levels rose from 6 to 35.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We report three claims, each supported by executed experiment.
+
+\textbf{One. ASR and content level are anti-correlated.} The six-generation
+ladder spans pass rates from 10\% to 100\% (44\% overall, 60/136), but the pass
+rate ordering is the reverse of the content ordering: the round that passes
+8/8 yields measured neutral pose, one image clothed, while the round aimed at
+sexual activity passes 8/30, a difference of $p=3\times10^{-4}$.
+
+\textbf{Two. Detectors are non-monotonic.} A clearly nude ukiyo-e print returns
+zero detections, while a non-erotic marble sculpture triggers a core anatomical
+detection.
+
+\textbf{Three. No single scalar can hold the content structure.} There exists
+an image pair whose orders on two of the axes are opposed, so no
+order-preserving single ordinal assignment exists. Binary ASR and ordinal
+grading therefore fail with \emph{different natures}.
+
+The constructive contributions are a three-axis instrument that refuses to
+fold, and a six-generation attack ladder whose mechanism is the
+\emph{institutional fact} rather than token search: naming the genre passes
+23/24 while naming the anatomy is refused 0/18. \textbf{Our negative findings
+matter as much}: a regime cap compresses a coupled-pair image from 7 to 3; the
+second tonal condition is structurally unsatisfiable under a flat genre (real
+0/16, synthetic control 4/4); the top level was once obtained by notation
+rather than rendering, and the rubric cannot tell the two apart; and the
+material reading is partly supplied by the mounting, so cropping a sculpture
+turns a manufactured object into a drawn human.
+
+\section{Limitations}
+\label{sec:limitations}
+
+\textbf{The subject-class discount is untested}, and is stated as a monotone
+prior rather than an estimate. \textbf{There is no human construct validity}:
+the levels are an instrument under test, not ground truth, and agreement is
+measured against a detector and repeated model judgements, not against trained
+annotators---this is the largest gap. \textbf{Positive cells are small}, so
+intervals are wide and some anchors are undefined; a corpus with designed
+prevalence is needed before these values can be cited as stable. \textbf{All
+detector figures are at one fixed threshold}, chosen before scoring and not
+tuned. \textbf{Batch non-stationarity} affects the interpretive anchors, and
+the cause is unknown, so anchors must be reported per run. \textbf{Generation
+refusals establish that a boundary exists within the tested range; they are not
+a rate.} \textbf{The 20-image corpus is not a sample}---it was selected by
+purpose and does not generalise. \textbf{The material axis is not yet a valid
+measure} until the presentation confound is removed.
+
+\section{Ethical considerations}
+\label{sec:ethics}
+
+This study measures the behaviour of open models and content judges on
+controlled images. It does not generate new explicit material for release; we
+release only hashes, manifests, model records and aggregate statistics, and it
+depicts no real person.
+
+\paragraph{On disclosing the attack.} We publish a prompt-construction ladder
+that crosses content filters. Our judgement is that disclosure does more good
+than harm, for three reasons. Every generation of the ladder \emph{depends only
+on the semantic frame of the prompt} and on no implementation flaw, so it does
+not have the property that disclosure alone unlocks it. Not measuring it is
+what prevents repair: current evaluation, because ASR is anti-correlated with
+content level, \emph{systematically understates bypasses that have already
+occurred}. And the artifact we argue for reports \emph{what was produced}, not
+only \emph{whether it passed}, which raises rather than lowers accountability.
+
+\paragraph{Scope limitation is not a harmlessness claim.} We study sexual
+content only and make no claim about violence, gore, terrorism, extremism, hate
+symbols, self-harm, harassment or illegal activity; none were sampled or
+measured. Level zero does not mean ``harmless'' or ``compliant''; it means ``no
+sexual-content anchor was observed under this instrument.''
+
+\paragraph{Figure content.} The figures reproduce images generated for this
+study, several of which depict unclothed bodies. They are included because the
+central claims---that two axes can rank oppositely, and that a detector does
+not fire on a clearly nude drawing---cannot be checked without them. We note
+the tension with venue norms around explicit imagery and defer to the chairs on
+reproduction.
+
+\section{Reproduction and evidence status}
+\label{sec:repro}
+
+Every number in this paper is read from a frozen JSON record; the mapping from
+claim to record is Appendix~\ref{app:code}. In brief, the \texttt{observed}
+extent is: 1{,}086 composites with pixel-identity assertions and three detector
+records each; 606 CLIP records; 100 background-only records; 54 \sexl{} anchor
+records with per-anchor detector agreement; 55 same-batch and 42 interleaved
+repeat judgements; status records for 136 attack deliveries; 21 three-axis
+matched controls; 20 three-axis two-arm and three-arm records. The
+\texttt{not\_verified} extent is: human construct validity; any provider's
+policy determination; the subject-class discount values; the ``all 3'' result
+of \S\ref{sec:cap}, which is recomputed from prompt text; the two-instrument
+consistency; temporal stability on the three-axis system; that one model is
+better than another; and any statement about non-sexual NSFW categories.
+
+\bibliography{references}
+
+\appendix
+\input{appendix}
+
+\end{document}

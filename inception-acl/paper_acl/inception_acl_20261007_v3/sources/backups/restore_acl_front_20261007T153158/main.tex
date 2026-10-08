@@ -1,0 +1,61 @@
+\documentclass[11pt]{article}
+\usepackage[review]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{CJKutf8}
+\usepackage{microtype}
+% Optional Inconsolata omitted, as permitted by the official template.
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{booktabs,amsmath,amssymb,tabularx,array}
+\usepackage{float}
+\usepackage[most]{tcolorbox}
+\usepackage{alphalph}
+\usepackage{url}
+\usepackage{colortbl}
+\graphicspath{{../}{assets/}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
+\definecolor{axisM}{HTML}{386C91}
+\definecolor{axisE}{HTML}{AA7040}
+\definecolor{axisP}{HTML}{417E72}
+\definecolor{axisMbg}{HTML}{EFF4F8}
+\definecolor{axisEbg}{HTML}{FAF3EC}
+\definecolor{axisPbg}{HTML}{EFF6F3}
+\newtcolorbox{promptcard}[2]{enhanced,colback=#1!3!white,colframe=#1!65!white,
+colbacktitle=#1!10!white,coltitle=black,title={#2},fonttitle=\small\bfseries,
+fontupper=\small\rmfamily,boxrule=0.5pt,arc=1mm,
+left=7pt,right=7pt,top=6pt,bottom=6pt,
+before upper={\setlength{\parindent}{0pt}\setlength{\parskip}{4pt}}}
+\newtcolorbox{selectedprompt}[1]{enhanced,breakable,colback=axisM!3!white,
+colframe=axisM!50!white,colbacktitle=axisM!10!white,coltitle=black,
+title={#1},fonttitle=\small\bfseries,fontupper=\fontsize{9}{11}\selectfont\rmfamily,
+boxrule=0.5pt,arc=1mm,left=7pt,right=7pt,top=6pt,bottom=6pt,
+before upper={\setlength{\parindent}{0pt}\setlength{\parskip}{3pt}},
+before skip=8pt,after skip=3pt}
+\newcommand{\pact}{\textsc{PACT}}
+\newcommand{\pactasr}{\textsc{PACT-ASR}}
+\newcommand{\inception}{\textsc{Inception}}
+\newcommand{\jointtarget}{\ensuremath{M_3/E_6/P_2}}
+\newcommand{\sexl}{\textsc{Sex-L}}
+\hypersetup{hidelinks,pdftitle={Inception: Pose-Controlled Image Jailbreaks with Conjunctive Target Evaluation},pdfauthor={Anonymous ACL submission}}
+\title{Inception: Pose-Controlled Image Jailbreaks\\with Conjunctive Target Evaluation}
+\author{Anonymous ACL submission}
+% Allow full-width evidence to share a page when there is room at readable size.
+\setcounter{dbltopnumber}{2}
+\begin{document}
+\maketitle
+\input{body}
+\label{page:last-main}
+\clearpage
+\input{backmatter}
+\bibliography{references}
+\clearpage
+\appendix
+\renewcommand{\thesection}{\AlphAlph{\value{section}}}
+\input{appendix}
+\label{page:last-appendix}
+\end{document}

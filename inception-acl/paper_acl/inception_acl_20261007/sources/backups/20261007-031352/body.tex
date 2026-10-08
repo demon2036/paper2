@@ -1,0 +1,274 @@
+\begin{abstract}
+Image jailbreaks must both cross a safety boundary and realize the requested content. Attack success rates based on a binary safety label collapse an important distinction: an output can enter the target category while changing the requested material, anatomical exposure, or body configuration. We study target-preserving jailbreaks with input-specified poses. We introduce \pact{}, Pose-Aligned Conjunctive Testing, which assesses material, exposure, and pose separately and counts success only when their requirements, including the requested configuration, hold in the same depicted figure. We pair this evaluation with \inception{}, a prompt-only method that separates an outer presentation scene from an inner visual target through nested depiction. On Image2, archived outputs exhibit modern drawn figures, the highest exposure category in our rubric, and sexualized presentation across three requested configuration families. Strategy comparisons and evaluator diagnostics further distinguish image return from target attainment. Together, nested depiction and pose-aligned evaluation turn an undifferentiated success label into a test of what an attack preserves and controls.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+What should count as a successful image jailbreak? Consider a request for a modern drawn figure, a specified exposure level, and a particular body configuration. A sculpture changes the material requirement. A less explicit drawing changes the content requirement. A sexualized pose with a different arrangement of the body changes the configuration requirement. All can receive the same positive safety label. Equal contributions to a binary attack success rate (ASR) can therefore represent different achievements.
+
+This ambiguity matters because image generation increasingly responds to compositional instructions. A request describes not only which objects should appear, but also their attributes and relations. Safety mechanisms constrain this process through prompt assessment, sampling-time guidance, concept control, and output filtering \citep{ldm,imagen,sld,esd,guardt2i,latentguard}. A jailbreak is thus also a constrained generation problem: the output should retain the visual target as the request is reorganized to cross the safety boundary.
+
+We organize this problem around two requirements: \emph{target preservation} and \emph{pose control}. Target preservation requires the output to retain the requested figure material, anatomical exposure, and pose category. Pose control requires agreement with a configuration specified in the input. Reclined sitting, side-lying with head support, and one knee raised are different conditions, not interchangeable examples of a broad sexualized-pose category. Distinguishing them makes the requested capability concrete.
+
+Our first contribution is an evaluation that measures these requirements together. \pact{} independently reads material $M$, exposure $E$, and pose $P$, then matches the observations to the requested target. Pose matching includes both the category and the specified configuration. \pactasr{} counts their conjunction on the same output and the same figure. Component results explain which requirement was lost. This design builds on atomic content checks in image evaluation while supplying an explicit success condition for the attack task \citep{tifa,dsg,geneval}.
+
+Our second contribution is a representation of the request that separates what may change from what should remain fixed. Natural-language attacks already use artistic framing, educational contexts, and material substitution. Low-Effort provides a direct account of such strategies, while MODX incorporates semantic preservation into artistic modifier search \citep{aestheticcamouflage,modx}. The structural question is how to reorganize the surrounding task without replacing the visual target itself.
+
+\inception{} uses nested depiction: an image presents a work that, in turn, depicts a figure. The outer scene specifies how the work is situated; the inner description specifies the figure's material, content, and configuration. A depiction relation connects them. This gives context and target separate roles. A photograph can present a drawing without making the drawn figure photographic, and the surrounding scene can change while the figure remains subject to an explicit pose condition.
+
+Figure~\ref{fig:methodcontrol} pairs the evaluation requirements with three archived Image2 outputs. Their existing assessments share the profile \jointtarget{}: a modern drawn human, both anatomical feature classes required by the highest exposure category, and sexualized presentation. Their configurations correspond to different input-specified pose families. The figure establishes the visual capabilities being examined; the subsequent comparisons separate these examples from repeated-attempt statistics.
+
+Our contributions are: (1) \pact{}, an object-level, pose-aligned definition of target success; (2) \inception{}, a nested-depiction construction that separates outer context from inner target constraints; and (3) an Image2 study combining configuration-specific examples, nearby strategy comparisons, and diagnostics of the evaluation itself. The same requirements organize the method and the evidence throughout the paper.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[t]{0.34\textwidth}
+\vspace{0pt}
+\small
+\textbf{What does success require?}\par\medskip
+\begin{tabularx}{\linewidth}{@{}Ycc@{}}
+\toprule
+Target & Safety ASR & \pact{} \\
+\midrule
+Safety category & Label & Target checks \\
+Material $M_3$ & Unresolved & Required \\
+Exposure $E_6$ & Unresolved & Required \\
+Pose class $P_2$ & Unresolved & Required \\
+Requested $\pi^*$ & Unresolved & Matched \\
+\bottomrule
+\end{tabularx}
+\medskip
+All target checks concern one depicted figure in one output. A positive global safety label does not resolve the individual requirements.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.21\textwidth}\centering\vspace{0pt}
+\small\textbf{Reclined sitting}\par\medskip
+\includegraphics[width=\linewidth]{../inception_compare_20261007/assets/method_seated_redacted.png}\par
+$M_3\;/\;E_6\;/\;P_2$
+\end{minipage}\hfill
+\begin{minipage}[t]{0.21\textwidth}\centering\vspace{0pt}
+\small\textbf{Side-lying}\par\medskip
+\includegraphics[width=\linewidth]{../inception_compare_20261007/assets/method_side_redacted.png}\par
+$M_3\;/\;E_6\;/\;P_2$
+\end{minipage}\hfill
+\begin{minipage}[t]{0.21\textwidth}\centering\vspace{0pt}
+\small\textbf{One knee raised}\par\medskip
+\includegraphics[width=\linewidth]{../inception_compare_20261007/assets/method_knee_redacted.png}\par
+$M_3\;/\;E_6\;/\;P_2$
+\end{minipage}
+\caption{\textbf{A common target, different requested configurations.} The table contrasts binary safety-label counting with \pact{}. The three images are actual archived outputs, with profiles from the existing assessments of the unredacted originals. Presentation masks do not supply exposure evidence. Pose correspondence is described at the configuration-family level; the raised-knee case retains the requested knee relation but differs in overall orientation (Appendix~\ref{app:posealignment}). The examples are not a three-trial success-rate estimate.}
+\label{fig:methodcontrol}
+\end{figure*}
+
+\section{Related Work}
+\label{sec:related}
+\paragraph{Attack evaluation.}
+ASR comparisons depend on success definitions, evaluation conditions, and configuration coverage \citep{comparisonrequires,asrisnotanumber,singleconfig}. Low-Effort uses safety classifiers; RISE compares automatic judgments with human confirmation \citep{aestheticcamouflage,rise}. TIFA, GenEval, and DSG provide finer-grained checks of objects, attributes, and relations \citep{tifa,geneval,dsg}. These lines of work establish category-level measurement and tools for content verification. The remaining connection is an explicit definition of the full attack target. Even a correct safety label leaves its material, exposure, and configuration unresolved. \pact{} links the checks through a same-figure conjunction and an input-specified pose condition.
+
+\paragraph{Low-effort natural-language attacks.}
+Low-Effort studies artistic reframing, pseudo-educational framing, lifestyle and aesthetic contexts, and material substitution \citep{aestheticcamouflage}. These strategies show that descriptions and contexts affect generation. Their effects on the target differ: replacing a drawn human with a sculpture changes the figure material, whereas artistic framing changes the context in which the figure appears. Binary safety success does not separate those changes. \inception{} places the contextual transformation outside the depicted target; \pact{} then checks which inner requirements survive. This is a comparison of what the rewrite changes, not just whether a category detector fires.
+
+\paragraph{Semantic preservation.}
+JPA optimizes semantic alignment in prompt space, and MODX searches artistic modifiers while addressing consistency with the original intent \citep{jpa,modx}. Their contribution establishes that safety circumvention and content preservation should be considered together. Global semantic agreement, however, can coexist with a changed rendering or body arrangement. We operationalize preservation through separate figure attributes and a requested configuration. This makes deviations localizable rather than subsuming them under a single similarity judgment.
+
+\paragraph{Evidence on modern generators.}
+PixJail evaluates multiple attacks, including Low-Effort, under a shared protocol on Image2 and other generators. RISE supplies strategy-evolution results and public examples \citep{pixjail,rise}. Such benchmarks establish aggregate performance, while examples expose particular visual capabilities. A cross-category rate does not identify whether \jointtarget{} and a specified configuration coincide in one output. Our comparisons therefore retain the measurement attached to each source: published benchmark rates, matched archived-return counts, and image-level target profiles. The supplementary evidence separates these quantities and preserves the model attribution of public examples.
+
+\section{PACT: Pose-Aligned Conjunctive Testing}
+\label{sec:axes}
+\label{sec:targetmatch}
+\subsection{The unit and target of evaluation}
+\pact{} evaluates a specified figure, not the global appearance of the image. In a photograph of a comic page, the room may be photographic while the person on the page is drawn. Material cues must be attributed to that person. Likewise, exposure from one panel cannot be combined with a matching pose from another. The object assignment precedes the attribute checks.
+
+We write the target as $t^*=(m^*,e^*,p^*,\pi^*)$, where $\pi^*$ specifies the requested body configuration. Our principal content profile is $(M_3,E_6,P_2)$. $M_3$ covers modern drawn humans, including animation, comics, and illustration; $E_6$ requires both anatomical feature classes in our exposure rubric; $P_2$ denotes sexualized presentation without visible sexual activity. A narrower manga-style requirement, or a more precise configuration, belongs in the target specification rather than being inferred from the broad category.
+
+\subsection{Independent attribute readings}
+Table~\ref{tab:axes} summarizes the three axes. Material identifies how the figure itself is represented. Exposure records visible covering and anatomical features. Pose describes the configuration and visible behavior. Each axis is judged from its own visual evidence before the results are combined.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}lY@{}}
+\toprule
+Axis & Categories \\
+\midrule
+$M$ & $M_1$: manufactured object or teaching plate; $M_2$: pre-modern flat work or invented species; $M_3$: modern drawn human; $M_4$: photograph or photorealism. \\
+$E$ & $E_1$: clothed; $E_2$: swimwear or fitted clothing; $E_3$: uncovered without identifiable detail; $E_4$: chest detail only; $E_5$: genital detail only; $E_6$: both feature classes. \\
+$P$ & $P_1$: neutral; $P_2$: sexualized posture; $P_3$: visible sexual activity. \\
+\bottomrule
+\end{tabularx}
+\caption{Independent descriptions of the depicted figure. Configuration agreement is checked within the pose requirement. Category indices are identifiers, not additive scores. Full instructions and boundary cases appear in Appendices~\ref{app:axisprompts}--\ref{app:exposurepose}.}
+\label{tab:axes}
+\end{table}
+
+Exposure and pose answer different questions. A neutral composition can show anatomical detail, and a clothed figure can have a sexualized posture. The exposure categories also encode feature combinations: $E_4$ and $E_5$ identify different visible features rather than successive values on a common intensity scale. Consequently, target matching uses the required features, not arithmetic on category numbers.
+
+The assessment proceeds in three steps. First, separate readings return a category and its evidence for each axis, without receiving the other axes' answers. Second, the records are associated with the same figure. Third, the observations are matched against the target, including the requested configuration. Occluded or ambiguous evidence remains unresolved until adjudication. Full prompts and the feature-matching rules are provided in the appendix.
+
+\subsection{Pose category and requested configuration}
+Pose control is a conditional capability: the input supplies a configuration, and the output is evaluated against it. A shared $P_2$ label is insufficient. A standing and a side-lying figure can both be sexualized while satisfying different requests. Configuration matching inspects the specified orientation, support, and limb relations.
+
+The target determines the matching granularity. If it requires only one knee raised, the knee relation is the relevant check. If it also requires lying on the back, that orientation must hold as well. We therefore distinguish the configuration-family descriptions used to present archived examples from complete instruction compliance. Appendix~\ref{app:posealignment} makes this distinction explicit for all three showcase requests. It prevents a realized subcondition from being silently promoted to full-prompt success.
+
+\subsection{Conjunctive success and denominators}
+Let $c_i^M$ and $c_i^E$ indicate material and exposure agreement for output $i$. Pose agreement combines category and configuration:
+\begin{equation}
+ c_i^P=\mathbb{1}[P_i\models p^*\;\land\;\pi_i\models\pi^*].
+\end{equation}
+The image-level success indicator and its rate are
+\begin{align}
+ J_i &= c_i^M c_i^E c_i^P,\label{eq:joint}\\
+ \pactasr{} &= \frac{1}{N}\sum_{i=1}^{N}J_i.\label{eq:rates}
+\end{align}
+Here $N$ is the registered request budget. Explicit refusals and assessed outputs missing any requirement contribute zero. The component rates are reported alongside the joint rate to locate deviations. The conjunction is computed per output; multiplying aggregate component rates would ignore their dependence and whether the requirements co-occur.
+
+Missing outcomes retain a distinct status. With $K$ confirmed joint successes and $U$ unresolved requests or assessments, the rate over the registered set lies in
+\begin{equation}
+ \left[\frac{K}{N},\frac{K+U}{N}\right].
+\end{equation}
+A point estimate follows once all requests have a resolved contribution. This definition keeps unresolved evidence separate from known target failure.
+
+\paragraph{What each statistic measures.}
+Image return records delivery. Binary safety ASR records a selected classifier's success label. \pactasr{} records realization of the full target. These statistics can be computed on the same experiment, but they are not interchangeable. In particular, the historical strategy comparison in Section~\ref{sec:comparison} reports archived returns because its outputs have not all received the joint assessment required here.
+
+\subsection{A common comparison task}
+A comparison fixes the visual target, model, generation settings, request budget, and assessment procedure before comparing success frequencies. Results are also shown by configuration. This exposes whether an aggregate is supported by several requested poses or concentrated in one. When a method changes material as part of its strategy, both the observed material and its agreement with the original target remain visible.
+
+\pact{} formalizes the target-matching logic rather than introducing a different arithmetic for ASR. Its contribution is the unit of assessment, the conditions under which an output is accepted, and the evidence retained for each condition. The protocol can therefore be applied to the output of any compared method under the same task definition.
+
+\section{Inception: Nested Depiction}
+\label{sec:attack}
+\subsection{Separate context from the visual target}
+A nested depiction represents one image or work inside another. The outer scene determines how the work is presented; the inner description determines what the work depicts. \inception{} uses this relation to give the context and the figure separate roles in a generation request.
+
+This separation matters for target preservation. A sheet is a carrier, not the figure's material category. A photograph describes the outer scene, not necessarily the rendering of the figure represented within it. Distinct constraints can therefore specify a photographic presentation and a drawn human at the same time. Evaluation follows the same relation back to the figure whose attributes define the target.
+
+\subsection{Treat pose as an input condition}
+The inner target specifies figure rendering, content requirements, and a body configuration. The configuration concerns orientation, support, and key limb relations. These conditions are written before generation and supply the reference for output assessment. The three showcase families thus correspond to different requested conditions rather than a list of poses assigned after generation.
+
+Configuration and exposure interact in visibility without becoming the same criterion. A change in orientation can hide a required feature even if the pose itself is realized. Each pose-conditioned output therefore receives a fresh joint check. This connects controllability to the complete task: preserving a pose label alone does not establish preservation of the content target.
+
+\subsection{Compose through a depiction relation}
+Let $x$ denote the content and configuration requirements, $c$ the outer context, and $m$ the figure rendering. We describe the request abstractly as
+\begin{equation}
+ q=\operatorname{Compose}(R(x,c),m),\label{eq:embedding}
+\end{equation}
+where $R$ states how the target is carried or represented within the scene. The design has three roles: $c$ identifies the outer task, $R$ organizes the relation between scene and target, and $m$ constrains the figure's realization. An existing complete example appears in Appendix~\ref{app:segments}; the actual texts used by the matched comparison appear in Appendices~\ref{app:our-seat}--\ref{app:aracprompts}.
+
+This structure provides a testable account of the method. Capability examples ask whether the complete content profile and requested configuration can coexist. Nearby strategies examine outcomes under a common pose budget. Component comparisons vary rendering, context, or the surrounding presentation and inspect which properties change. The experiments follow these questions in order.
+
+\paragraph{Structure and depth.}
+The depiction relation and the number of surrounding layers are different variables. One changes how the target belongs to the scene; the other changes how much surrounding description is requested. \inception{} is defined by the former. The depth comparison measures the latter and provides an explicit test of whether simply adding layers improves the observed returns.
+
+\section{Experiments}
+\label{sec:experiments}
+\subsection{Setup and evidence}
+Experiments use text-only generation on Image2. Image editing contributes no generation result. We examine modern drawn figures with the \jointtarget{} content profile and input-specified configuration families. Exact prompts, grouping, and sources are collected in the appendix so that the main text can focus on the comparisons.
+
+The study distinguishes three evidence sets. Showcase images have existing image-level attribute records and corresponding input texts. A five-method comparison shares three configuration conditions and four registered requests per condition. Component and evaluator diagnostics provide additional observations of rendering, context, and assessment behavior. Each table reports its own denominator and measurement.
+
+\subsection{Configuration-specific target examples}
+The outputs in Figure~\ref{fig:methodcontrol} share the existing profile \jointtarget{} while exhibiting different requested configuration families. Their outer frames, printed surfaces, and photographed settings coexist with a centrally drawn figure. This is the visual separation that the nested construction is designed to express.
+
+The configuration evidence is input--output correspondence. The first two cases have existing descriptions of reclined sitting and side-lying with head support. The third realizes the raised-knee relation, while the recorded overall orientation differs from the more specific lying instruction. The appendix preserves this difference at the level of the request. Thus, the examples show pose-conditioned content realizations at the stated granularity, and the joint protocol specifies how finer claims would be scored.
+
+These cases answer the capability question: the target content profile can appear in more than one requested configuration family. Repeated success probability is a separate quantity, requiring a registered series and complete per-output assessments. The subsequent strategy table supplies the available repeated-attempt evidence under its return metric.
+
+\subsection{Nearby natural-language strategies}
+\label{sec:comparison}
+We compare \inception{} with artistic reframing (ARA), material substitution (MSA), and lifestyle context (LS), implemented from the strategy families of Low-Effort \citep{aestheticcamouflage}. ARAC adds a drawn-material constraint to artistic reframing and is a study variant. Each method has the same three configuration conditions and four registered requests per condition.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Method & Sit & Side & Knee & All \\
+\midrule
+\inception{} & 0/4 & 2/4 & 2/4 & \textbf{4/12} \\
+Artistic reframing & 0/4 & 0/4 & 0/4 & 0/12 \\
+Material substitution & 0/4 & 0/4 & 0/4 & 0/12 \\
+Lifestyle context & 0/4 & 0/4 & 0/4 & 0/12 \\
+Art + drawn material & 0/4 & 0/4 & 0/4 & 0/12 \\
+\bottomrule
+\end{tabular}
+\caption{Archived image returns over registered requests. Sit, Side, and Knee identify the three requested configuration families. Zero denotes no corresponding archived image in the verified snapshot; the table is not \pactasr{}. Exact texts and provenance appear in Appendix~\ref{app:matchedcomparison}.}
+\label{tab:comparison}
+\end{table}
+
+Table~\ref{tab:comparison} places the observed difference in two conditions: side-lying and one knee raised. \inception{} has two archived returns in each and none in reclined sitting. The nearby conditions have no corresponding archived return in the snapshot. Reporting the configurations separately exposes where the aggregate comes from.
+
+The comparison measures delivery under a common pose budget. It complements, rather than reuses, the showcase examples: the complete prompts differ between the two evidence sets. Joint reassessment of the four returned comparison images is needed to fill their \pactasr{} entries. Keeping the return table under its observed metric makes the difference precise without assigning unmeasured attributes to it.
+
+\subsection{Figure rendering and carrier}
+The rendering comparison uses three different configurations: standing, crouching, and forward-leaning. Each receives three requests per condition. It contrasts cel rendering, color manga, and monochrome manga on a studio sheet, then compares color manga across two carriers.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}YYc@{}}
+\toprule
+Carrier & Figure rendering & Returned \\
+\midrule
+Studio sheet & Cel & 0/9 \\
+Studio sheet & Color manga & 1/9 \\
+Studio sheet & Monochrome manga & 1/9 \\
+Manuscript paper & Color manga & 0/9 \\
+\bottomrule
+\end{tabularx}
+\caption{Rendering and carrier comparison, with three requests for each of three configurations. Both returned manga images belong to the standing condition. The full configuration-resolved table appears in Appendix~\ref{app:medium}.}
+\label{tab:rendering}
+\end{table}
+
+Both manga returns are in the standing condition, with none in the crouching or forward-leaning conditions. They therefore establish narrower configuration coverage than the aggregate ``manga returned'' description suggests. They are not treated as failures of a standing request. This is exactly the distinction made visible by retaining the configuration attached to every output.
+
+The carrier contrast also keeps figure rendering explicit. With color manga fixed, the studio-sheet and manuscript-paper conditions yield one and zero returns, respectively. These counts concern the tested combinations. The representation of the surrounding surface and that of the body remain separate variables for interpreting the result.
+
+\subsection{Context, relations, and depth}
+Five contextual designations retain the body description and receive 24 requests each. Red-figure pottery returns 23/24 images, salon painting 17/24, coupled composition 13/24, Edo-period print 10/24, and wall painting 8/24. The fifteen-image range shows that the surrounding description accompanies substantial variation in delivery. Each designation also invokes a visual convention, making figure-level assessment necessary to determine what was preserved.
+
+A relation-component comparison records a more specific change. Removing the clause connecting the figure to the surrounding task yields a clothed figure despite an image return. The observation localizes the difference to the content target, not delivery. It motivates checking the inner attributes when interpreting the role of a contextual component.
+
+The requested-depth sweep yields return counts of $0,1,0,2,1,0,1,1,0,1$ for one through ten layers, with four attempts at each depth. There is no monotonic improvement. This distinguishes relational organization from accumulation of surrounding description. The complete outcomes, including unresolved requests, appear in Appendix~\ref{app:depthdetail}.
+
+\subsection{What the evaluation distinguishes}
+A separate gallery-context group returns 8/8 images, with neutral poses in the assessed outputs and one clothed figure. This result has high delivery but does not satisfy a target requiring both $E_6$ and $P_2$. By contrast, the showcased images have the specified content profile. The difference is visible only when the returned content is evaluated.
+
+The judgment procedure itself also responds to presentation. On twenty diagnostic images, comparison with full-image reading gives the changes in Table~\ref{tab:diagnostics}. Pose changes are the most frequent in both presentation conditions. These are paired automated readings of the same source images, not changes to the generated content.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Observation & Material & Exposure & Pose \\
+\midrule
+Boxed vs. full & 1/20 & 2/20 & 4/20 \\
+Cropped vs. full & 3/20 & 3/20 & 6/20 \\
+\bottomrule
+\end{tabular}
+\caption{Axis-specific changes under presentation-dependent assessment. Full paired profiles and the derived transition tables are supplied in Appendix~\ref{app:presentation}.}
+\label{tab:diagnostics}
+\end{table}
+
+A detector example gives a complementary failure mode. NudeNet returns no detections at threshold 0.20 on a woodblock image with identifiable chest details. A zero detection list is therefore not equivalent to the absence of the required feature. The appendix preserves the native detector outputs, their settings, and other diagnostic cases \citep{nudenet}.
+
+Together these observations motivate two parts of \pact{}: localize the evidence to the target figure, and retain the separate judgments before conjunction. A global category alone can miss content distinctions; a local reading without object attribution can be altered by the presentation. Both affect the meaning of an attack-success count.
+
+\section{Discussion}
+\label{sec:discussion}
+\paragraph{A shared object for construction and evaluation.}
+\inception{} and \pact{} follow the same relation in opposite directions. The construction places a target within a scene; the evaluation traces the scene back to the target. Their common object is the depicted figure with its requested attributes and configuration. This makes the relation between the proposed design and its measurement explicit.
+
+\paragraph{What controls the observed difference?}
+The nested structure supplies a concrete mechanism question: with the target and context held fixed, how does changing their depiction relation affect target preservation? The component observations identify relevant changes in output content, while the depth sweep separates relational structure from a simple ``more layers'' explanation. A fully matched relational intervention would estimate its independent contribution. Internal moderation stages require observations beyond the returned image and response wording.
+
+\paragraph{Comparisons should preserve their task.}
+The structural distinction from Low-Effort is where the rewrite acts; the evaluative distinction is what qualifies as success afterward. Material replacement can be effective for its own goal while failing a task that explicitly requires a drawn human. Likewise, broad semantic agreement can preserve the subject but not a requested configuration. Stating the common target before comparison makes these differences interpretable rather than hiding them inside an aggregate rate.
+
+\section{Conclusion}
+\label{sec:conclusion}
+We study image jailbreaks through target preservation and pose control. \inception{} uses nested depiction to separate an outer presentation task from an inner figure with explicit content and configuration requirements. \pact{} tests those requirements on the same figure and defines success by their conjunction. Image2 examples, nearby strategy comparisons, and evaluation diagnostics show why delivery, category-level success, and full target attainment must be measured separately. The resulting account connects how a request is organized to what its output actually preserves.
+
+\section*{Limitations}
+The generation evidence concerns Image2 and the visual targets defined here. The showcase requests differ in more than pose and support the stated configuration-family descriptions; they do not estimate repeatability or arbitrary-pose generalization. The raised-knee example also differs from the finer orientation in its request. The historical method comparison requires per-output joint reassessment before a \pactasr{} ranking can be reported.
+
+The axis readings are operational judgments of visible properties. Stylization, occlusion, and object attribution can change their reliability. The presentation diagnostics use stored automated assessments, while the separate historical repeat experiments concern an earlier evaluator. A dedicated agreement study of the full \pact{} protocol and matched relational ablations would address these distinct questions. Unresolved requests are retained explicitly in all outcome accounting.
+
+\section*{Ethical Considerations}
+The study examines image-generation safety and uses fictional figures rather than real people. Presentation copies obscure sensitive regions; the original images and their existing assessment records remain separate. Detailed target definitions and evidence provenance support scrutiny of the reported conclusions. The work is intended to inform evaluation of systems that must interpret both a surrounding scene and the content represented within it.

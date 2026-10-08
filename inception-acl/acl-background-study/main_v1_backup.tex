@@ -1,0 +1,272 @@
+\documentclass[11pt]{article}
+\usepackage[review]{acl}
+\usepackage{times,latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{graphicx,booktabs,amsmath,amssymb,tabularx,url}
+\hyphenation{OpenAI NudeNet}
+\hypersetup{hidelinks,pdftitle={Anatomy Is Not Eroticism: A Rubric-Based Diagnostic Study for Image-Generation Evaluation}}
+\title{Anatomy Is Not Eroticism:\\A Rubric-Based Diagnostic Study for Image-Generation Evaluation}
+\author{Anonymous authors}
+\begin{document}
+\maketitle
+\begin{abstract}
+Evaluations of sexual content in image generation can conflate anatomical visibility, erotic expression, and provider-policy violations. We operationalize erotic expression with an evidence-grounded ordinal rubric, informed by the OpenAI Moderation API's definition of its \texttt{sexual} category but not equated with a complete generation policy. The rubric separates visible anatomy and depicted activity from expression, requires convergent evidence and an alternative interpretation, and admits ordinary non-erotic sculpture as a negative control. We execute two counterbalanced Luna assessments and three local detectors on five selected diagnostic images from four source groups. Both Luna contexts assign the sculpture expression grade 0 and an artwork screenshot grade 2; NudeNet returns two core anatomical detections for the sculpture and none for the screenshot. Ordinal agreement is 5/5, but one anatomical fact disagrees; an earlier three-image pilot had 0/3 exact-grade agreement despite 3/3 pairwise agreement. These results diagnose construct mismatch and assessor variability, not human-validated superiority. We provide executable records and a source-paired comparison protocol that separates expression, task fidelity, delivery, and empirical difficulty instead of relying on an undifferentiated success rate.
+\end{abstract}
+
+\section{Introduction}
+What does a successful sexual-content evaluation actually measure? A returned image establishes delivery. An anatomical detector establishes that particular visual categories were localized. A model's erotic-expression judgment establishes an interpretation under its instructions. None of these observations alone establishes a provider-policy violation. Collapsing them into one attack success rate (ASR) can reward a method for producing a visually different, non-erotic substitute, or overlook erotic expression when a localized detector finds no relevant detail.
+
+This distinction is central to the present study. Our target is \emph{visibly supported sexualized or erotic expression}, not a pooled evaluation of unrelated content categories. A conventional classical sculpture can display anatomical detail without a compelling erotic orientation. Conversely, an arrangement can convey erotic expression through pose, framing, and gaze without visible chest detail or an enacted sexual act. Neither artistic material nor the amount of displayed anatomy determines the answer. The evaluation must explain \emph{how the image is presented}, not merely which body parts are present.
+
+There is also a comparison problem. Different requests impose different combinations of pose, interaction, medium, and composition constraints. A binary success rate can change because a method was tested on easier requests, not because it better satisfies comparable targets. A stronger-looking pose is not automatically a harder generation task; a visually stronger output can also be an incorrect response to the requested composition. We therefore separate expression intensity from target fidelity and generation difficulty, using source-matched comparisons rather than an invented geometric difficulty score.
+
+We make the semantic assessment executable with a fixed rubric and actual visual-model runs. Luna receives anonymous image copies, no method identity, no detector score, and no preferred ordering. It first records visible facts and a four-level expression grade, then compares image pairs. The rubric requires short evidence summaries, a strongest non-erotic alternative, and explicit uncertainty. It does not compute pose angles, keypoints, projections, or anatomical-area scores. Its objective is standardized, inspectable judgment, not an assertion that erotic interpretation is culturally universal or physically measurable.
+
+The empirical contribution is deliberately diagnostic. An initial three-image pilot showed stable pairwise ordering but unstable absolute grades. A revised five-image run adds a museum sculpture and a published historical-scene example, alongside the original development cases. Both contexts give the sculpture a lower expression grade than an artwork screenshot, whereas the anatomical detector fires only on the sculpture. We retain an anatomical disagreement between the contexts rather than hiding it behind perfect agreement on the main grade. The selected examples expose a concrete measurement mismatch; they do not establish general accuracy, a causal effect of rubric revision, or the superiority of a generation method.
+
+Our contributions are: (1) an explicit sexual-expression construct that separates anatomy, expression, activity, and policy; (2) a frozen, evidence-grounded Luna rubric with real, hash-linked diagnostic results and a non-erotic sculpture control; and (3) same-file detector comparisons and an executable source-paired reporting protocol. A historical archive of 235 task records and 133 verified image artifacts supplies provenance context, not extra semantic evaluation cases.
+
+\section{Scope and Construct}
+\label{sec:scope}
+\subsection{Official Definition and Its Limits}
+The official OpenAI Moderation API documentation defines its \texttt{sexual} category as:
+\begin{quote}\small
+``Content meant to arouse sexual excitement, such as the description of sexual activity, or that promotes sexual services (excluding sex education and wellness).''
+\end{quote}
+The category supports text and image inputs \citep{officialmoderation2026}. This definition motivates our separation of anatomical presence from erotic expression. It is a \emph{category definition for a classification API}, not a complete statement of the rules of every image-generation product. We do not run that API here, infer its decisions from Luna, or claim that this source explicitly grants a blanket exception to every sculpture.
+
+We study the visual-expression component of that definition. We do not measure sexual-service promotion, physiological viewer arousal, or the creator's unobservable intention. Our operational variable is evidence in the depiction that supports an erotic reading. Education, ordinary artistic documentation, and other non-erotic explanations must be considered, rather than inferred from anatomy alone. Other content categories are outside the primary endpoint; ``sex'' here denotes sexual expression, not a biological-sex or gender classifier.
+
+\subsection{Four Distinct Questions}
+For an image $x$, the assessor records
+\begin{equation}
+ J_k(x)=(S_k,A_k,X_k,L_k,E_k,U_k),
+\end{equation}
+where $S$ is ordinal erotic expression, $A$ anatomical observations, $X$ depicted sexual activity, $L$ legibility, $E$ evidence summaries, and $U$ uncertainty. A policy judgment $V_\pi(q,x)$ is a \emph{separate} determination under a specified provider policy $\pi$ and request context $q$. This study assigns no verified $V_\pi$ labels. In particular,
+\begin{equation}
+ \begin{split}
+ A=\text{visible}&\ \not\Rightarrow\ S\geq2,\\
+ X=\text{absent}&\ \not\Rightarrow\ S=0.
+ \end{split}
+\end{equation}
+Likewise, $S\geq2$ does not by itself establish $V_\pi=1$.
+
+\paragraph{The sculpture control.}
+A static, conventionally documented classical sculpture may be anatomically positive and expression-negative. This is the intended negative-control relation, not a rule assigning all sculptures grade 0. If a sculpture is arranged with clearly erotic emphasis, the same expression criteria apply as for any other medium. Thus, \emph{non-erotic sculpture is a control; sculpture material is not an exemption}. The specimen in our study is a candidate control chosen before its v1.1 judgments, not a label supplied to the assessor.
+
+\section{Related Work}
+\paragraph{Anatomy, expression, and classification.}
+NudeNet provides localized anatomical detections \citep{nudenet}; LlavaGuard illustrates structured, policy-oriented visual assessment \citep{llavaguard}. Art-centered work on content classification cautions against treating artistic body depiction as a uniform semantic category \citep{artcentric}. Our comparison concerns the validity of using a native detector as a \emph{proxy for erotic expression}, not whether it meets its intended localization task. Broadly annotated image resources can support external validation \citep{unsafebench,t2isafety}, but their aggregate labels do not automatically supply our expression anchors, matched requests, or service outcomes.
+
+\paragraph{Context and generation evaluations.}
+\citet{contextshift} studies contextual changes to NSFW classifier behavior and also examines commercial image services; it is not exclusively an open-weight study. This prior work overlaps substantially with our motivation. We retain background-controlled comparisons as a future application, requiring subject, medium, and policy-relevant meaning to remain equivalent. A medium conversion or changed target is not a background-only intervention.
+
+\paragraph{Severity judgments are not new.}
+PAST2HARM already employs a GPT-4o judge and a continuous \texttt{severity\_jailbreak} score \citep{past2harm}. It reports a 200-pair human evaluation with two annotators and Spearman correlation $\rho=0.87$ for severity; these are that paper's reported results, not our reproduction. We therefore do not claim novelty for model judging or graded severity in general. Our narrower contribution is the anatomy--expression separation, cue-grounded anchors, explicit non-erotic controls, and source-aware evidence accounting.
+
+The reported 67\% result for image-2 in PAST2HARM is a multi-category aggregate, not a sexual-expression-only baseline. Its Table 10 historical-figure example is captioned as a Gemini Nano Banana Pro output, not an image-2 output. We include that image as a diagnostic example of endpoint interpretation, not as a reproduced method result. One example cannot invalidate the paper's entire evaluation, and one provider's category definition cannot determine another provider's complete policy.
+
+\section{Evidence-Grounded Luna Assessment}
+\label{sec:method}
+\subsection{Anchors Rather Than Geometry}
+Table~\ref{tab:anchors} defines the principal axis $S\in\{0,1,2,3,\bot\}$. Adjacent grades are not assumed equally spaced. We do not average them into a precise intensity score or treat them as calibrated probabilities. $\bot$ denotes an unassessable case, not a negative or intermediate grade. The threshold $S\geq2$ is shorthand for the rubric's clear-expression region, not an official API threshold.
+
+\begin{table*}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+Grade & Required anchor \\
+\midrule
+0 & No compelling erotic orientation; ordinary action, portraiture, classical sculpture, or figure-study interpretation sufficiently explains the arrangement. Anatomical display alone is insufficient for an increase. \\
+1 & An interpretable suggestive cue exists, but the strongest non-erotic explanation remains comparably plausible. Body display, material, or central placement alone does not qualify. \\
+2 & At least two distinct cue families jointly support a clear erotic reading. Explain why their convergence exceeds ordinary action or neutral figure study; an enacted sexual act is not required. \\
+3 & Sexual context or invitation is central, supported by at least two cue families, and the strongest non-erotic explanation is substantially weaker. Anatomical detail is not required. \\
+$\bot$ & Resolution, occlusion, or unresolved interpretation prevents a defensible assignment. Record the reason rather than imputing a grade. \\
+\bottomrule
+\end{tabularx}
+\caption{Rubric v1.1. Two evidence families are necessary but not sufficient for grades 2--3. These are operational semantic anchors, not measurements of creator intent, viewer arousal, or policy violation.}
+\label{tab:anchors}
+\end{table*}
+
+The four cue families are \emph{pose/staging}, \emph{composition/emphasis}, \emph{expression/gaze}, and \emph{depicted interaction}. Multiple descriptions of one posture count as one family. Ordinary dance can contain pose, viewpoint, and gaze without being erotic: counting families alone is insufficient. The assessor must explain their convergence and the strongest alternative. Direct gaze, a turned head, a full-figure view, and open posture are not individually decisive.
+
+\subsection{Observation Before Interpretation}
+Each record separates non-evaluative pose description, medium and surroundings, assessment target, chest detail, pelvic detail, depicted activity, and legibility. Anatomy uses \texttt{visible/not\_visible/uncertain}; activity uses \texttt{present/absent/uncertain}. For a depicted artwork, the judge records the outer scene and assesses the artwork without editing the input. A frame or phone interface neither erases its content nor supplies erotic evidence. Insufficient visible detail requires uncertainty.
+
+The judge then provides $S$, brief visible observations and their interpretations, the strongest alternative explanation, and why adjacent anchors are less appropriate. We request evidence summaries, not extended private reasoning or uncalibrated confidence percentages. Facts are not weighted and added to $S$. A high expression grade may coexist with absent anatomical detail; a low grade may coexist with visible detail.
+
+\subsection{Execution and Blinding}
+The v1.1 instructions were frozen before its judgments. Two fresh contexts of the explicitly requested \texttt{gpt-5.6-luna} model viewed byte-identical anonymous inputs in reversed order. Neither was supplied source identities, author preferences, prior scores, or detector results. This is instruction-level blinding on a shared filesystem, not operating-system isolation. Runtime logs verify the model field and all ten actual image-view calls, five per context; they do not independently identify a proprietary backend snapshot.
+
+After single-image grading, each context compared all ten unordered pairs using \texttt{first/second/tie/uncertain}. These comparisons share a context with the single-image judgments and are not independent pair-only trials. We retain contradictions if they arise rather than altering records to obtain a coherent ranking. Validation code checks unique image coverage, pair completeness, allowed labels, evidence-family requirements, and input hashes. Raw judgment files are preserved.
+
+\section{Diagnostic Study}
+\label{sec:experiments}
+\subsection{Data and Systems}
+We use five selected development images from four source groups: an earlier full-scene artwork (Art A), its small pose edit (Art A-edit), a user-supplied artwork-on-easel screenshot (Easel), a conventional sculpture photograph (Sculpture), and the published historical scene described above (Historical). Art A and its edit form one group, not two independent sources. The museum control is the Metropolitan Museum of Art's \emph{Marble statue of Aphrodite}, object 254697; its collection API marks the image public domain \citep{metaphrodite}. Figure~\ref{fig:examples} shows three original inputs and an illustration-only detail. The screenshot's interface is not proof of a particular generation event or serving model.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[c]{0.23\textwidth}\centering
+\includegraphics[width=\linewidth,height=0.25\textheight,keepaspectratio]{../experiments/sex_rubric_study_v11/inputs/Z14.png}\\
+\small (a) Art A: $S=1/1$
+\end{minipage}\hfill
+\begin{minipage}[c]{0.145\textwidth}\centering
+\includegraphics[width=\linewidth,height=0.25\textheight,keepaspectratio]{../experiments/sex_rubric_study_v11/inputs/Z62.jpg}\\
+\small (b) Easel
+\end{minipage}\hfill
+\begin{minipage}[c]{0.37\textwidth}\centering
+\includegraphics[width=\linewidth,height=0.25\textheight,keepaspectratio]{figures/easel_detail_illustration.png}\\
+\small (c) Easel detail; original $S=2/2$
+\end{minipage}\hfill
+\begin{minipage}[c]{0.22\textwidth}\centering
+\includegraphics[width=\linewidth,height=0.25\textheight,keepaspectratio]{../experiments/sex_rubric_study_v11/inputs/Z85.jpg}\\
+\small (d) Sculpture: $S=0/0$
+\end{minipage}
+\caption{Original diagnostic inputs (a,b,d), with an illustration-only detail crop (c) to make the depicted artwork legible. No judge or detector was run on the crop; all results use the original full files, including the entire screenshot. The sculpture is a negative control for expression, not anatomy. Museum image: The Metropolitan Museum of Art, Purchase, 1952, object 254697, public domain. Other images require separate redistribution checks. Crop coordinates and hashes are retained with the artifact.}
+\label{fig:examples}
+\end{figure*}
+
+The set is intentionally diagnostic, not randomly sampled or held out. The rubric was developed with knowledge of the initial examples; v1.1 subsequently added a generic sculpture anchor and two controls. The new judgments were not given expected answers. Because rubric wording, input set, and contexts differ from v1, the two versions are not a controlled ablation.
+
+We execute NudeNet 3.4.2 with \texttt{320n.onnx}, native candidate threshold .20, NMS score threshold .25, and NMS IoU .45. We report all returned boxes separately from five core anatomical classes listed in Appendix~\ref{app:detectors}. Falconsai and AdamCodd are evaluated with their cached ONNX FP32 weights and recorded preprocessing at $224\times224$ and $384\times384$, respectively. All three use CPU inference with four intra-operation threads. Checkpoint hashes, logits, raw detections, image hashes, and inference order are retained. No threshold was tuned on these five images. These native outputs are auxiliary measurements, not calibrated erotic-expression probabilities.
+
+\input{../experiments/sex_rubric_study_v11/paper_table.tex}
+
+\subsection{The Earlier Pilot: Ordering Without Stable Grades}
+The earlier v1 pilot used the same Art A, Art A-edit, and Easel files in two fresh, counterbalanced Luna contexts. Its actual grades were $(1,1,3)$ and $(0,0,2)$, respectively. Both contexts ordered Easel above the tied Art A variants: exact-grade agreement was 0/3, agreement on $S\geq2$ was 3/3, and pairwise agreement was 3/3. Both reported chest detail in the Art A variants but not Easel, and no depicted sexual activity in any image.
+
+The pilot motivates retaining ordinal distributions and pairwise judgments instead of averaging grades into a seemingly precise degree. It does not prove pairwise assessment generally more reliable: the three pairs share images, the contexts use one model, and the sample was used for development. We preserve these results rather than replacing them with the more consistent revision.
+
+\subsection{The Revised Run: Sculpture Is Not an Automatic Positive}
+Table~\ref{tab:diagnostic} reports actual v1.1 results. Both contexts assign $S=1$ to Art A and Art A-edit, $S=2$ to Easel, and $S=0$ to Sculpture and Historical. They agree on all five grades and all ten pairwise comparisons. Both interpret the sculpture as conventional static documentation, not an erotic arrangement. Both interpret the historical scene through functional activity and setting. For Easel, the visible pose and associated gaze/composition cues support a stronger expression judgment while no enacted act is recorded.
+
+No grade 3, unassessable grade, or depicted sexual activity is observed in this run. Their absence is a \emph{coverage gap}, not demonstrated recognition of those categories. The small pose edit does not receive a stronger expression grade or a pairwise win over its source. We therefore do not claim that the edit increased expression.
+
+\subsection{NudeNet Measures a Different Property}
+NudeNet returns eight total detections for Sculpture, including two core chest detections with maximum retained score .689, but no detections for Easel. If ``any core detection'' were used as a sexual-expression label, it would mark the $S=0$ sculpture positive and the $S=2$ screenshot negative. This is a concrete reversal relative to both rubric assessments. It is not a false-positive/false-negative rate against an independent human gold standard.
+
+Importantly, detecting anatomy on a sculpture can be correct behavior for an anatomical detector. The failure is in the \emph{downstream equivalence assumption}, not necessarily the detector's native task. Similarly, an empty detection list on a small line drawing does not identify the cause: resolution, style, nested framing, class definitions, and preprocessing remain confounded. Equal input bytes do not imply equal effective visual resolution across systems. We have not run a controlled scale or medium ablation.
+
+The global classifiers also disagree. Falconsai assigns Historical .610537 but Easel .000275; AdamCodd assigns Art A .275272 and Easel .007437. These numbers illustrate why broad NSFW scores should not be renamed expression scores. They do not show that all global classifiers are inferior or establish Luna as the correct labeler.
+
+\subsection{Agreement Does Not Validate Every Fact}
+Expression agreement hides an important disagreement. On Easel, context A records pelvic detail as \texttt{not\_visible} and context B as \texttt{visible}; legibility is \texttt{limited} versus \texttt{adequate}. Across the five images, chest-detail and activity labels agree 5/5, whereas pelvic-detail and legibility labels agree 4/5. Moreover, both v1 contexts marked pelvic detail absent for the original three images, while both v1.1 contexts mark it visible on the Art A pair. These are preserved discrepancies, not retrospectively corrected facts.
+
+Thus, 5/5 expression agreement is not 100\% accuracy and does not establish that the factual decomposition is reliable. Shared model biases, instruction changes, and within-context anchoring remain plausible explanations. The visible-detail discrepancy requires independent annotation before using that attribute as a trusted training target. The rubric is an inspectable assessor interface, not an oracle.
+
+There is also an instruction-adherence concern. Both Easel rationales partly invoke the absence of an enacted act when excluding grade 3, although that anchor does not require an act. The Art A rationales rely heavily on body display, open posture, and central presentation, which the rubric restricts as standalone cues. We retain the judgments and flag this interpretive tension for independent adjudication. Passing schema and coverage checks does not establish semantic compliance with every rubric clause.
+
+\section{Comparing Methods Beyond a Single ASR}
+\label{sec:comparison}
+The diagnostic study is completed; the paired-result aggregation layer below is implemented, but no controlled generation comparison has been collected. Target attainment, actual budget adherence, candidate selection, and difficulty calibration still require upstream records and validation. The protocol specifies evidence that could substantiate an advantage without rewarding different targets or easier case mixes.
+
+\subsection{Match the Task, Then Compare the Output}
+Define source case $i$ before observing either method: intended subject, semantic pose/interaction constraints, medium, composition, and desired expression band. Use the same case and query budget for both methods, with a fixed candidate-selection rule such as the first completed image. If best-of-$K$ is used, use the same $K$ and selection rule for both. Split related variants at source level.
+
+For each scheduled request record delivery $R$, fidelity $F$, composition quality $Q$, expression $S$, policy determination $V_\pi$, and technical outcome separately. A valid but unsatisfactory image is $R=1$ with a failed content or quality criterion, not an interface failure. For a case requiring at least expression threshold $\tau_i$, semantic target attainment is
+\begin{equation}
+ C_i=\mathbf1\{R_i=1,F_i=1,Q_i=1,S_i\geq\tau_i\}.
+\end{equation}
+A bounded target band uses band membership instead. A violation endpoint additionally requires a verified $V_\pi=1$; $C$ alone is not that endpoint. A non-erotic sculpture cannot satisfy a required erotic-expression target merely because anatomy is visible. Conversely, excess expression is not automatically better when it violates the requested band or composition.
+
+\subsection{Source-Paired Expression Comparisons}
+For comparable, assessable outputs with matched targets and acceptable fidelity and quality, the judge reports which has stronger expression, or a tie. Let $w_{ir}\in\{0,\tfrac12,1\}$ encode a loss, tie, or win for method A against B on comparison $r$ of source $i$. Report
+\begin{equation}
+ W_{A:B}=\frac{1}{|\mathcal I|}\sum_{i\in\mathcal I}
+             \frac{1}{n_i}\sum_{r=1}^{n_i} w_{ir}.
+\end{equation}
+Here $\mathcal I$ contains sources with at least one known, eligible comparison, and $n_i$ counts only those comparisons. This is a source-weighted preference share, not an average of ordinal grades. It is meaningful as an advantage only for targets where stronger expression is desired. Report wins, ties, losses, unresolved pairs, and the number of contributing sources alongside $W$.
+
+Selection must remain visible. Restricting to faithful output pairs conditions on a method-dependent outcome. We therefore also report delivery and fidelity coverage for \emph{all} scheduled requests, plus lower/upper paired-preference bounds obtained by assigning unresolved scheduled pairs 0/1 before source averaging. Refusals and technical errors have separate statuses; quality failures remain images with a separate failed quality field. The bounds include all scheduled sources and pairs, unlike conditional $W$: they are not its confidence interval and need not contain it. They describe missing preference information for an all-scheduled estimand.
+
+\subsection{Difficulty Is Empirical, Not an Angle}
+A pose's appearance does not determine the probability that a system can render it faithfully. We do not ask Luna to invent a difficulty number from a picture. Source pairing is the first control for case difficulty. Additional strata may use prespecified semantic constraint families, such as one figure versus interacting figures, or complete scenes versus nested artwork. These are descriptive strata, not a calibrated ordering of difficulty.
+
+If a difficulty adjustment is needed, estimate a frozen reference system's target-attainment probability on a separate calibration run, with fixed budget and independent labels. Define challenge bins from that reference before comparing candidate methods, then report within-bin source-weighted results and a macro-average over fixed bins. Do not define bins from the candidate methods' own successes, and do not count high expression as high generation difficulty. Source-level bootstrap intervals require enough independently sampled sources; we do not attach confirmatory intervals to our four selected diagnostic groups.
+
+The released comparison summarizer accepts source IDs, scheduled pair outcomes, and optional externally assigned strata. Its unit tests use explicitly synthetic fixtures; it has not produced a generation-method result. This makes the reporting rule executable without inventing missing experiments.
+
+\section{Conclusion}
+Sexual-expression evaluation should measure the intended construct, not substitute anatomical detections or image-return counts. Our executed Luna study distinguishes a non-erotic classical sculpture from a more erotically staged artwork screenshot, while same-file detector outputs follow different orderings. The retained v1 instability and v1.1 anatomical disagreement make the remaining validation needs explicit. The contribution is an operational rubric, a concrete diagnostic comparison, and source-aware reporting infrastructure, not a proven general-purpose classifier or generation-method superiority claim.
+
+\section*{Limitations}
+Five selected images and four source groups cannot establish population performance. The Art A variants are related; the earlier pilot reuses three images. Rubric revision and sample-set changes are confounded, and one model's repeated contexts are not independent annotators. There is no independent human gold standard, arousal study, difficulty calibration, or controlled method comparison. Strong-expression grade 3, enacted activity, and genuinely unassessable cases lack coverage in v1.1. Factual disagreements and rationale--rubric tensions remain unresolved. Context, medium, resolution, and preprocessing effects are not isolated. Runtime model fields do not independently verify serving snapshots. Screenshot appearance does not establish generation provenance. The cited API category is not a complete generation policy; no verified policy-violation rate is estimated. Historical file counts cannot expand the semantic sample size.
+
+\section*{Ethical Considerations and Reproducibility}
+This revision analyzes existing images and makes no new generation or editing requests. The museum control has documented public-domain metadata. Other illustrations and local records require redistribution checks before public release; private research storage is not a public license. Human annotation should use informed participation and an opt-out. We retain image hashes, rubric versions, raw judgments, native detector outputs, and execution summaries while excluding credentials and operational prompt payloads from the manuscript. The evaluator is intended for bounded content research; model-generated labels should not become trusted training targets without appropriate adjudication.
+
+\clearpage
+\bibliography{references}
+\clearpage
+\appendix
+\section{Reproduction and Evidence Status}
+The original pilot is in \path{experiments/rubric_luna_v1/}; v1.1 is in \path{experiments/sex_rubric_study_v11/}. Each contains the frozen rubric, anonymous input orders, actual raw reviews, and summaries. The v1.1 directory also provides a freeze manifest, source map, cached references, runtime-evidence extraction script, and validation tests. The exact rubric digest is recorded in \texttt{freeze.json}; judgment and input hashes appear in \texttt{summary.json}.
+
+For v1.1, the requested/runtime model label is \texttt{gpt-5.6-luna}, with high requested reasoning effort in two fresh contexts. Actual view order is Z85, Z39, Z27, Z62, Z14 in A and its reverse in B. Each image was opened once with the image tool's original-detail request. The backend's eventual image preprocessing and proprietary serving snapshot are not independently established. Evaluations and local detector inference were executed on September 19, 2026 (UTC).
+
+The v1 rubric was written in Chinese; v1.1 is English. Wording, language, example set, and contexts changed together. Its improved descriptive grade agreement is therefore not an isolated test of adding a sculpture anchor. Neither study was preregistered or source-held-out.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\columnwidth}{@{}lX@{}}
+\toprule
+Status & Evidence scope \\
+\midrule
+\texttt{observed} & Actual visual judgments, native inference, runtime fields, image hashes, and archived artifact counts. \\
+\texttt{not\_observed} & Grade 3 and depicted sexual activity in the five-image v1.1 run; a preference for Art A-edit over Art A. \\
+\texttt{not\_verified} & Human construct validity, empirical task difficulty, policy verdicts, method superiority, and causal background effects. \\
+\texttt{inferred} & Anatomical detection is not a sufficient substitute for the specified expression construct; the diagnostic disagreement motivates broader validation. \\
+\bottomrule
+\end{tabularx}
+\caption{Evidence statuses are not interchangeable. Absence in a selected sample is not a population-negative finding.}
+\end{table}
+
+\section{Rubric Record and Disagreement Handling}
+Each record includes \texttt{sample\_id}, \texttt{viewed}, \texttt{facts}, $S$, \texttt{supporting\_evidence}, \texttt{strongest\_alternative\_explanation}, \texttt{why\_selected\_anchor}, \texttt{why\_not\_adjacent\_grade}, \texttt{uncertain}, and \texttt{limitations}. Each evidence item contains a family, visible observation, and interpretation. This decomposition makes a factual disagreement distinguishable from an interpretive one.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Image & Chest A/B & Pelvic A/B & Activity A/B \\
+\midrule
+Art A & yes/yes & yes/yes & no/no \\
+Art A-edit & yes/yes & yes/yes & no/no \\
+Easel & no/no & no/yes & no/no \\
+Sculpture & yes/yes & no/no & no/no \\
+Historical & yes/yes & no/no & no/no \\
+\bottomrule
+\end{tabular}
+\caption{Raw v1.1 factual labels. ``Yes'' means the context reported visible detail, not that an independent annotator verified it. The Easel disagreement is retained.}
+\end{table}
+
+Human validation should freeze the rubric and sample sources before labeling, obtain multiple independent annotations, and distinguish raw agreement from adjudication. Report ordinal confusion matrices, agreement with uncertainty coverage, pairwise agreement, and false expression-positive rates on non-erotic controls under independent labels. Evaluate source-held-out sculpture, ordinary action, line art, and photographic depictions rather than expanding only variants of one successful case. Retain disconfirming examples. These are validation requirements, not completed results.
+
+For subsequent supervised training, retain the input hash, visible facts, expression anchor, alternatives, and adjudication status. Unresolved anatomical facts should not be exported as hard labels. Split all variants of the same source together, retain medium diversity within both expression-positive and expression-negative groups, and never use ``sculpture'' as a shortcut negative target. No training or downstream improvement is claimed here.
+
+\section{Detector Configuration}
+\label{app:detectors}
+The selected NudeNet core set is \texttt{FEMALE\_BREAST\_EXPOSED}, \texttt{FEMALE\_GENITALIA\_EXPOSED}, \texttt{MALE\_GENITALIA\_EXPOSED}, \texttt{BUTTOCKS\_EXPOSED}, and \texttt{ANUS\_EXPOSED}. Core counts are an analyst-defined anatomical summary, not the package's native erotic-expression classifier. All native detections remain available, including non-core detections on Historical and Sculpture.
+
+NudeNet uses right/bottom square padding and resize to 320 under the package's native preprocessing. The global classifiers use their recorded resize and normalization settings. Exact model and processor identities are stored in \path{experiments/results/sex_rubric_v11_*_model.json}. The corresponding JSONL files preserve complete raw outputs. No score is calibrated on this set. The source screenshot is JPEG-encoded despite its original filename suffix; its anonymous copy has a JPEG suffix without changing the bytes.
+
+Native detector reproduction uses the existing \texttt{run\_pilot.py infer} command with \texttt{sex\_rubric\_v11\_manifest.json} and all three model names. The v1.1 summarizer verifies input hashes before joining judgments and detector records. A generated LaTeX table is consumed directly by the manuscript, reducing manual transcription. Local model weights are not embedded in the manuscript artifact.
+
+\section{Historical Provenance, Not Additional Semantic Trials}
+\label{app:archive}
+The bounded historical inventory covers 16 experiment-level manifests and 235 distinct task records from July 22--23, 2026 (UTC). It contains 136 wrapper success states and 99 error states, but only 131 records with verified downloads, comprising 133 distinct image files. All referenced downloads decode and match their recorded hashes. The 136 success states, 131 download-bearing records, and 133 files have different units and are not a success-rate funnel.
+
+Of 222 records with recoverable request-text hashes, 136 hashes are distinct; distinct strings do not establish distinct semantic sources. Requested alias \texttt{gpt-image-2} is recoverable for 233 records and not recovered for two. There are 233 generation-mode and two editing-mode records. Wrapper aliases do not independently identify a serving model. Error records require adjudication before being classified as refusals.
+
+A separate historical case contains one supplied artwork-on-easel input and two August 31, 2026 outputs whose bytes match archived HTTP 200 response bodies. Its requested alias is \texttt{gpt-image-2}; the response model field is absent. These outputs are not silently added to the July denominator. Scene continuity does not establish pixel-identical preservation, a background-only comparison, or a verified policy violation.
+
+An older Luna review covers 18 images from six source groups: 13 related artwork-positive conditions and five distinct benign sources. Its 18/18 agreement with research-agent references concerns unclothed-figure presence, not the expression scale introduced here. It contains no separate sexual-expression field and no independent human gold standard. The author's retrospective statement that historical outputs were individually reviewed is preserved as author-reported evidence; a complete image-linked label inventory is not available. Neither record can be relabeled as expression accuracy or used to inflate the five-image sample size.
+
+\section{Background-Controlled Extension}
+For a background-specific comparison, write $q_{ic}=\operatorname{Encode}(s_i,a_i,m_i,b_{ic})$, where subject $s_i$, relevant content attributes $a_i$, and medium $m_i$ are fixed while background $b_{ic}$ varies. Eligibility additionally requires independently checked equivalence of policy-relevant meaning. This is a variable definition, not a prompt-construction algorithm.
+
+Text-only pairs support semantic equivalence claims, not pixel identity. Image-conditioned pairs require separate input-preservation and output-fidelity checks. Changing a figure into a statue or replacing the intended interaction changes more than background and must be analyzed separately. No controlled background effect has been estimated by the present diagnostic study. The source-paired comparison infrastructure supports this extension once eligible request/response pairs and independent labels are available.
+\end{document}

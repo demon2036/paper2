@@ -1,0 +1,32 @@
+\begin{figure*}[t]\centering
+\includegraphics[width=\textwidth]{figures/figT_appendix.png}
+\caption{\textbf{Two negative results, in one figure.} (a) The shell-medium ablation: ten openings, one segment varied, and every medium except the original 35mm documentary returned neither a pass nor a refusal. The benign 36-byte probe passes, which shows the service was answering. \textbf{The corpus's uniform use of one medium is therefore a coverage gap in our own work, not a demonstration that other media cannot work.} (b) The gold recipe's full outcome history: one byte-identical prompt, 10 cells, four different outcomes.}
+\label{fig:appmedium}\end{figure*}
+
+\section{Why the medium ablation is inconclusive, and what would fix it}
+\label{app:mediumlimit}
+
+The ablation in \S\ref{app:medium} has one cell per medium and returned information for none of them. \textbf{That is a null result at n = 1 per cell}; one unresolved request does not establish that a medium succeeds or fails.
+
+Two designs would settle it, and neither was run. The first is the obvious one: repeat each medium enough times that the binomial interval excludes the control's rate. With the control at roughly 28\% (21 of 75, see \ref{app:goldhistory}), separating it from a medium that never passes needs about sixteen cells per arm at conventional power. The second is cheaper and more informative: run each medium alternating with the control in one session, so that the state of the gate is shared between the arms rather than inferred. The alternating design is what \S\ref{app:discrim} uses.
+
+We report the gap rather than the conclusion. \textbf{A corpus in which every experiment used one medium cannot tell you whether the medium matters}, and this appendix exists so that a reader can see the gap without reconstructing it from the shell strings.
+
+\section{Prompt length, and the control that rules it out}
+\label{app:length}
+
+Long prompts could in principle be treated differently by a moderation layer: a second check triggered by context length, or a longer queue. Two cells in the corpus address this directly, and both were run serially against the same endpoint in the same period.
+
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}lrrl@{}}\toprule
+cell & characters & content & result \\
+\midrule
+short benign & 101 & none & 3/3 pass (30.6 / 21.2 / 18.8\,s) \\
+long benign & 4561 & none & 3/3 pass (30.1 / 26.8 / 29.0\,s) \\
+short content & 629 & present & blocked (75.2 / 75.3\,s) \\
+long content & 4561 & present & blocked \\
+\bottomrule\end{tabular}
+\caption{\textbf{Length is not the gate.} The benign long cell is character-for-character the same length as the content long cell (4561 = 4561, a 0.00\% difference) and describes an unoccupied office with no body, no anatomy, no stance, no genre and no sensitive term. It passes 3/3 while the content cell blocks. The short content cell is one seventh the length of the control and still blocks.}
+\label{tab:applength}\end{table}
+
+The padded cell of the medium ablation is the same control in the other direction: it takes the control's content and adds redundant modifiers, changing length while holding meaning. It did not produce a result either, which is consistent with length not being the operative variable but does not on its own establish it.
